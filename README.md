@@ -12,7 +12,7 @@ MindKeep is an offline-first personal assistant and second brain for Android. It
 - On-device AI behind a replaceable runtime interface
 
 ## Build
-Open the project in Android Studio with JDK 17 and Android SDK 37 installed, sync Gradle, then run the app configuration.
+Open the project in Android Studio with JDK 17 and Android SDK 36 installed, sync Gradle, then run the app configuration.
 
 ## Structure
     app/src/main/java/com/vikram/mindkeep/
@@ -30,7 +30,7 @@ Open the project in Android Studio with JDK 17 and Android SDK 37 installed, syn
 5. Use WorkManager for deferrable work; keep exact-alarm behavior opt-in.
 
 ## Current status
-This scaffold establishes the Android app, Gradle configuration, Material 3 theme, navigation entry point and feature boundaries. Database schemas, AI inference, capture services and reminder scheduling are not implemented yet.
+The app now includes a single-screen introduction, animated in-app splash, Material 3 Compose shell, Home, Search, Tasks, Reminders and Settings pages. Notes, tasks and reminders are persisted locally using app-private storage. Reminders are scheduled with WorkManager and delivered through a notification channel when notification permission is granted. No network permission or account is required. On-device AI, voice capture, richer note editing/search indexing, export/import and database migration to Room remain future implementation areas.
 
 
 ## GitHub Actions builds
@@ -48,3 +48,10 @@ Both variants use the same upload keystore. Add these repository Actions secrets
 - `ANDROID_KEY_PASSWORD`
 
 The signing key must be backed up securely. Never commit the keystore or its passwords. The repository ignores `.jks`, `.keystore` and `.p12` files.
+
+
+## Permissions
+
+- **POST_NOTIFICATIONS** — requested only when the user enables notifications or creates a reminder on Android 13+.
+- No internet, contacts, location, camera or microphone permission is requested by the current foundation.
+- Reminder work is scheduled locally through WorkManager; exact-alarm permission is intentionally not requested.
