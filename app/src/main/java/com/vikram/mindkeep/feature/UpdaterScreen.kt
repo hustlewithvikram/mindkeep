@@ -204,7 +204,6 @@ fun UpdaterScreen(topPadding: Dp) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("App updates", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Text("Keep MindKeep current, or choose a release channel.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
