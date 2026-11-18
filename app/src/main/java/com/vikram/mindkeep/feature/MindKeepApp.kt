@@ -148,7 +148,8 @@ fun MindKeepApp() {
     val pageStates = rememberSaveableStateHolder()
     var movingForward by remember { mutableStateOf(true) }
     fun navigate(destination: MindPage) { if (destination != backStack.last()) { movingForward = true; backStack = backStack + destination } }
-    fun selectTab(destination: MindPage) {\n        fun tabIndex(value: MindPage) = when (value) { MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS, MindPage.CRASH_LOGS -> 0; MindPage.ASSISTANT -> 1; MindPage.SETTINGS -> 2 }\n        movingForward = tabIndex(destination) > tabIndex(page)\n        backStack = listOf(destination)\n    }
+    fun selectTab(destination: MindPage) {
+        fun tabIndex(value: MindPage) = when (value) { MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS, MindPage.CRASH_LOGS -> 0; MindPage.ASSISTANT -> 1; MindPage.SETTINGS -> 2 }\n        movingForward = tabIndex(destination) > tabIndex(page)\n        backStack = listOf(destination)\n    }
     fun goBack() { if (backStack.size > 1) { movingForward = false; backStack = backStack.dropLast(1) } }
     var notes by remember { mutableStateOf(MindKeepStore.loadNotes(context)) }
     var tasks by remember { mutableStateOf(MindKeepStore.loadTasks(context)) }
