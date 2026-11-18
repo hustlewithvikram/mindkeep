@@ -88,17 +88,17 @@ jobs:
         run: |
           SHORT_SHA="${GITHUB_SHA::7}"
           if gh release view "$DEBUG_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-  gh release upload "$DEBUG_TAG" app/build/outputs/apk/debug/app-debug.apk app-debug.apk.sha256 --repo "$GITHUB_REPOSITORY" --clobber
-  gh release edit "$DEBUG_TAG" --repo "$GITHUB_REPOSITORY" --title "MindKeep Debug (latest: $SHORT_SHA)" --prerelease --notes-file release-notes.md
-else
-  gh release create "$DEBUG_TAG" app/build/outputs/apk/debug/app-debug.apk app-debug.apk.sha256 --repo "$GITHUB_REPOSITORY" --title "MindKeep Debug (latest: $SHORT_SHA)" --prerelease --notes-file release-notes.md
-fi
+            gh release upload "$DEBUG_TAG" app/build/outputs/apk/debug/app-debug.apk app-debug.apk.sha256 --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$DEBUG_TAG" --repo "$GITHUB_REPOSITORY" --title "MindKeep Debug (latest: $SHORT_SHA)" --prerelease --notes-file release-notes.md
+          else
+            gh release create "$DEBUG_TAG" app/build/outputs/apk/debug/app-debug.apk app-debug.apk.sha256 --repo "$GITHUB_REPOSITORY" --title "MindKeep Debug (latest: $SHORT_SHA)" --prerelease --notes-file release-notes.md
+          fi
 
-# Remove older debug prereleases created by the previous workflow.
-gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease == true and (.tagName | startswith("debug-")) and .tagName != "debug-latest") | .tagName' | while IFS= read -r old_tag; do
-  [ -n "$old_tag" ] || continue
-  gh release delete "$old_tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
-done
+          # Remove older debug prereleases created by the previous workflow.
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease == true and (.tagName | startswith("debug-")) and .tagName != "debug-latest") | .tagName' | while IFS= read -r old_tag; do
+            [ -n "$old_tag" ] || continue
+            gh release delete "$old_tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          done
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
