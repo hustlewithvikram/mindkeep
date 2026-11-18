@@ -12,7 +12,7 @@ MindKeep is an offline-first personal assistant and second brain for Android. It
 - On-device AI behind a replaceable runtime interface
 
 ## Build
-Open the project in Android Studio with JDK 17 and Android SDK 36 installed, sync Gradle, then run the app configuration.
+Open the project in Android Studio with JDK 21 and Android SDK 36 installed, sync Gradle, then run the app configuration.
 
 ## Structure
     app/src/main/java/com/vikram/mindkeep/
@@ -30,14 +30,14 @@ Open the project in Android Studio with JDK 17 and Android SDK 36 installed, syn
 5. Use WorkManager for deferrable work; keep exact-alarm behavior opt-in.
 
 ## Current status
-The app now includes a single-screen introduction, animated in-app splash, Material 3 Compose shell, Home, Ask (AI readiness), Search, Tasks, Reminders and Settings pages. Notes, tasks and reminders are persisted locally using app-private storage. Reminders are scheduled with WorkManager and delivered through a notification channel when notification permission is granted. No network permission or account is required. The on-device assistant contract is defined, but a model runtime and inference implementation are not connected yet. Voice capture, richer note editing/search indexing, export/import and database migration to Room remain future implementation areas.
+The app includes Activity, Assistant and Settings tabs, a subpage back stack with slide transitions, local notes/tasks/reminders, an opt-in Android notification listener, a LiteRT-LM local model manager, direct model downloads, persistent conversation recall and a WorkManager queue for resumable assistant tasks. The current model catalogue includes Qwen 3 0.6B, Qwen 3 1.7B and Gemma 4 E2B. The Assistant screen loads the selected local model on demand; no cloud inference fallback is implemented. Google Keep, Google Calendar and MCP connections remain UI foundations and are not authenticated or operational yet.
 
 
 ## GitHub Actions builds
 
 Two workflows are included:
 
-- **Debug APK** — runs on every branch push, signs the debug APK with the CI keystore, and publishes a GitHub prerelease containing the APK, SHA-256 checksum, recent commit changelog, full commit SHA, branch and workflow run.
+- **Debug APK** — runs on pushes to `main`, signs the debug APK with the CI keystore, and replaces the single `debug-latest` prerelease containing the APK, SHA-256 checksum, recent commit changelog, full commit SHA, branch and workflow run.
 - **Release APK** — manually started from Actions → Release APK → Run workflow. Enter a version; the workflow builds and signs the release APK and publishes a normal GitHub Release.
 
 Both variants use the same upload keystore. Add these repository Actions secrets before the first workflow run:
@@ -52,6 +52,8 @@ The signing key must be backed up securely. Never commit the keystore or its pas
 
 ## Permissions
 
-- **POST_NOTIFICATIONS** — requested only when the user enables notifications or creates a reminder on Android 13+.
-- No internet, contacts, location, camera or microphone permission is requested by the current foundation.
+- **POST_NOTIFICATIONS** — requested only when the user enables local reminder notifications on Android 13+.
+- **Notification access** — the user must explicitly enable this in Android settings and then turn on capture in Activity. Notification text is stored locally.
+- **INTERNET** — used only to check app releases and download user-selected model/APK files. Inference and stored memory remain on-device.
+- No contacts, location, camera or microphone permission is requested.
 - Reminder work is scheduled locally through WorkManager; exact-alarm permission is intentionally not requested.
