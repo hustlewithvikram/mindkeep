@@ -101,6 +101,10 @@ fun AssistantPage(topPadding: Dp) {
     }
 
     fun startDownload(model: LocalAiModel) {
+        if (LocalAiCatalog.availableStorageBytes(context) < (model.sizeBytes * 1.1).toLong()) {
+            downloadStatus = "Not enough free storage. Free up at least ${model.sizeLabel} plus temporary download space."
+            return
+        }
         val target = model.file(context)
         target.parentFile?.mkdirs()
         val request = DownloadManager.Request(Uri.parse(model.downloadUrl))
@@ -142,8 +146,8 @@ fun AssistantPage(topPadding: Dp) {
                             Text(if (activeModel != null) "Ready to load" else "No model", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
-                    Text(activeModel?.name ?: "Choose your first model", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
-                    Text(activeModel?.description ?: "Download a model below. MindKeep will run it locally and keep your conversations on this device.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text(activeModel?.name ?: if (installed.isNotEmpty()) "Free up device memory" else "Choose your first model", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                    Text(activeModel?.description ?: if (installed.isNotEmpty()) "None of the installed models currently fit the free-memory estimate. Close other apps or switch to manual model selection." else "Download a model below. MindKeep will run it locally and keep your conversations on this device.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         ModelMetric("Free RAM", "${availableRam} GB")
                         ModelMetric("Model storage", "${availableStorage} GB free")
@@ -158,7 +162,7 @@ fun AssistantPage(topPadding: Dp) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text("Auto-select model", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text("Choose the strongest installed model that fits current free RAM.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Choose the largest installed model under a conservative free-RAM estimate.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = autoSelect, onCheckedChange = {
                             autoSelect = it
@@ -323,7 +327,7 @@ private fun ModelCard(
             Text(model.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 ModelSpec("Download", model.sizeLabel)
-                ModelSpec("Free RAM needed", "${model.minimumFreeRamGb}+ GB")
+                ModelSpec("Suggested free RAM", "${model.minimumFreeRamGb}+ GB")
                 ModelSpec("Context", "${model.contextTokens / 1000}K")
             }
             Text("Licence: ${model.license}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
