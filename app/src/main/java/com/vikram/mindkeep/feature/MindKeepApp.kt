@@ -203,7 +203,7 @@ fun MindKeepApp() {
                 NavigationBar(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent,
                     tonalElevation = 0.dp,
-                    windowInsets = WindowInsets(0)
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
                     NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { selectTab(MindPage.HOME) }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
                     NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { selectTab(MindPage.ASSISTANT) }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
