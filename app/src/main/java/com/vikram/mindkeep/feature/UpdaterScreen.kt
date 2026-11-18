@@ -21,8 +21,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -199,7 +197,7 @@ fun UpdaterScreen(topPadding: Dp) {
     }
 
     val updateAvailable = release != null && !upToDate
-    val blue = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color(0xFF8AB4F8) else Color(0xFF2869C7)
+    
 
     Column(
         Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp),
@@ -240,7 +238,7 @@ fun UpdaterScreen(topPadding: Dp) {
                         Icon(if (apkReady) Icons.Default.CheckCircle else Icons.Default.CloudDownload, null, tint = if (apkReady) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary)
                         Text("Update status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.weight(1f))
-                        Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                        
                     }
                     if (downloadId != null || apkReady) {
                         LinearProgressIndicator(
@@ -293,7 +291,7 @@ fun UpdaterScreen(topPadding: Dp) {
                     onClick = { checkAgain() },
                     enabled = !checking && downloadId == null,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) { Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(5.dp)); Text("Check", maxLines = 1) }
                 Button(
                     onClick = {
@@ -309,7 +307,7 @@ fun UpdaterScreen(topPadding: Dp) {
                     onClick = { installApk() },
                     enabled = apkReady,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = blue, contentColor = Color.White)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
                 ) { Icon(Icons.Default.InstallMobile, null); Spacer(Modifier.width(5.dp)); Text("Install", maxLines = 1) }
             }
             Text("The installer is handled by Android. MindKeep removes the downloaded APK after a successful update.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
