@@ -280,6 +280,7 @@ fun AssistantPage(topPadding: Dp) {
                                     AssistantMemoryStore.append(context, "user", userText)
                                     recentTurns = AssistantMemoryStore.recent(context, 8)
                                     val fullPrompt = if (memory.isBlank()) userText else "Relevant conversation memory:\n$memory\n\nCurrent request:\n$userText"
+                                    LocalModelRuntime.resetConversation()
                                     LocalModelRuntime.generate(fullPrompt).collect { answer += it }
                                     AssistantMemoryStore.append(context, "assistant", answer)
                                     recentTurns = AssistantMemoryStore.recent(context, 8)
