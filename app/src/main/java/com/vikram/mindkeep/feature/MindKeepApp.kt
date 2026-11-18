@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -286,8 +285,7 @@ private fun IntroScreen(onContinue: () -> Unit) {
                     Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(58.dp))
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Make space for
-what matters.", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
+                    Text("Make space for\\nwhat matters.", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
                     Text("A private place for your thoughts, plans and reminders. Capture now, find them whenever you need.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
