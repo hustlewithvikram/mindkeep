@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.work.*
 import com.vikram.mindkeep.core.ai.AssistantMemoryStore
+import com.vikram.mindkeep.core.ai.AssistantWorkStore
+import com.vikram.mindkeep.core.ai.AssistantWorkWorker
 import com.vikram.mindkeep.core.ai.LocalAiCatalog
 import com.vikram.mindkeep.core.ai.LocalAiModel
 import com.vikram.mindkeep.core.ai.LocalAiPreferences
@@ -50,6 +52,7 @@ fun AssistantPage(topPadding: Dp) {
     var loadingModel by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var memoryCount by remember { mutableIntStateOf(AssistantMemoryStore.recent(context, 10000).size) }
+    var pendingCount by remember { mutableIntStateOf(AssistantWorkStore.pending(context).size) }
     val installed = LocalAiCatalog.models.filter { it.isInstalled(context) }
     val activeModel = if (autoSelect) LocalAiCatalog.autoSelect(context, installed) else LocalAiCatalog.byId(defaultId)?.takeIf { it.isInstalled(context) }
     val availableRam = LocalAiCatalog.availableRamGb(context)
@@ -256,6 +259,21 @@ fun AssistantPage(topPadding: Dp) {
                         Spacer(Modifier.width(8.dp))
                         Text(if (loadingModel) "Loading model…" else if (generating) "Thinking…" else "Ask locally")
                     }
+                    OutlinedButton(
+                        onClick = {
+                            val queuedPrompt = prompt.trim()
+                            if (queuedPrompt.isNotEmpty()) {
+                                val workId = AssistantWorkStore.enqueue(context, queuedPrompt)
+                                AssistantWorkWorker.enqueue(context, workId)
+                                prompt = ""
+                                pendingCount = AssistantWorkStore.pending(context).size
+                                downloadStatus = "Saved to background queue. It will resume when a compatible local model is ready."
+                            }
+                        },
+                        enabled = prompt.isNotBlank() && !generating,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Continue in background") }
+                    if (pendingCount > 0) Text("$pendingCount background task(s) waiting or processing", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
                     if (activeModel == null) Text("Install a model to start chatting. Requests are not sent to a cloud service.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
                 }
             }
