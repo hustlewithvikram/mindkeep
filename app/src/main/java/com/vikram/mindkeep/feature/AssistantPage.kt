@@ -170,8 +170,8 @@ fun AssistantPage(topPadding: Dp) {
                         })
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Text("Default model", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(defaultId?.let { LocalAiCatalog.byId(it)?.name } ?: "Not selected", style = MaterialTheme.typography.titleMedium)
+                    Text("Selected model", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(activeModel?.name ?: "No compatible installed model", style = MaterialTheme.typography.titleMedium)
                     Text(if (autoSelect) "Automatic selection is active. Turn it off to pin a default model." else "Your selected model will be used whenever it is installed.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -189,7 +189,7 @@ fun AssistantPage(topPadding: Dp) {
             ModelCard(
                 model = model,
                 installed = model.isInstalled(context),
-                selected = defaultId == model.id,
+                selected = activeModel?.id == model.id,
                 recommended = model.minimumFreeRamGb <= availableRam,
                 downloading = downloadModelId == model.id && downloadId != null,
                 progress = if (downloadModelId == model.id) downloadPercent else 0,
