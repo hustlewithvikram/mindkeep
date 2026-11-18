@@ -43,6 +43,6 @@ class AssistantWorkWorker(context:Context,params:WorkerParameters):CoroutineWork
     .build()
    WorkManager.getInstance(context).enqueueUniqueWork("mindkeep-assistant-$id",ExistingWorkPolicy.REPLACE,request)
   }
-  fun resumePending(context:Context) { AssistantWorkStore.pending(context).forEach{enqueue(context,it.id)} }
+  fun resumePending(context:Context) { AssistantWorkStore.queued(context).forEach{enqueue(context,it.id)} }
  }
 }
