@@ -12,7 +12,7 @@ object LocalAiCatalog {
  val models=listOf(
   LocalAiModel("qwen3-0.6b","Qwen 3 · 0.6B","Qwen","Small, fast everyday assistant. Best starting point for most phones.","Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm","https://huggingface.co/litert-community/Qwen3-0.6B/resolve/main/Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm","328 MB",344_000_000L,3,4096,"Apache 2.0","Recommended"),
   LocalAiModel("qwen3-1.7b","Qwen 3 · 1.7B","Qwen","Stronger reasoning and writing. Needs more memory and storage.","Qwen3-1.7B_dynamic_wi4b32_afp32.litertlm","https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/Qwen3-1.7B_dynamic_wi4b32_afp32.litertlm","932 MB",977_000_000L,5,4096,"Apache 2.0","Advanced"),
-  LocalAiModel("gemma4-e2b","Gemma 4 · E2B","Gemma","Larger multimodal-capable model for capable devices.","gemma-4-E2B-it-gpu.litertlm","https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm","2.34 GB",2_512_000_000L,8,8192,"Apache 2.0","Powerful")
+  LocalAiModel("gemma4-e2b","Gemma 4 · E2B","Gemma","Higher-capacity assistant model for devices with more memory.","gemma-4-E2B-it.litertlm","https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm","2.59 GB",2_780_000_000L,8,8192,"Apache 2.0","Powerful")
  )
  fun byId(id:String?)=models.firstOrNull{it.id==id}
  fun availableRamGb(context:Context):Int { val m=context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager; val i=ActivityManager.MemoryInfo();m.getMemoryInfo(i);return (i.availMem/(1024L*1024L*1024L)).toInt() }
