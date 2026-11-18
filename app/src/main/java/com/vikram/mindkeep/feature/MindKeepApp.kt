@@ -283,7 +283,7 @@ private fun HomePage(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("I’m listening.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text("Your context, in one place.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text("Your personal context, quietly organised.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
         }
