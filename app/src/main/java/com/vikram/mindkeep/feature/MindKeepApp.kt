@@ -17,6 +17,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.ChevronUp
+import androidx.compose.material.icons.filled.ChevronDown
+import androidx.compose.material.icons.filled.History
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.foundation.layout.offset
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -125,7 +133,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, CONNECTORS, UPDATER, LOCAL_MODELS, SETTINGS }
+private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, CONNECTORS, UPDATER, LOCAL_MODELS, CRASH_LOGS, SETTINGS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,6 +143,7 @@ fun MindKeepApp() {
     var splashVisible by remember { mutableStateOf(true) }
     var backStack by rememberSaveable { mutableStateOf(listOf(MindPage.HOME)) }
     val page = backStack.last()
+    val pageStates = rememberSaveableStateHolder()
     var movingForward by remember { mutableStateOf(true) }
     fun navigate(destination: MindPage) { if (destination != backStack.last()) { movingForward = true; backStack = backStack + destination } }
     fun selectTab(destination: MindPage) { movingForward = true; backStack = listOf(destination) }
@@ -173,7 +182,7 @@ fun MindKeepApp() {
     }
 
     BackHandler(enabled = backStack.size > 1) { goBack() }
-    val isSubpage = page in setOf(MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS)
+    val isSubpage = page in setOf(MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS, MindPage.CRASH_LOGS)
     val pageTitle = when (page) {
         MindPage.SEARCH -> "Search"
         MindPage.TASKS -> "Tasks"
@@ -181,6 +190,7 @@ fun MindKeepApp() {
         MindPage.CONNECTORS -> "Integrations"
         MindPage.UPDATER -> "App updater"
         MindPage.LOCAL_MODELS -> "Local AI models"
+        MindPage.CRASH_LOGS -> "Crash reports"
         else -> ""
     }
     Scaffold(
@@ -192,22 +202,63 @@ fun MindKeepApp() {
             }
         },
         bottomBar = {
+            val selectedIndex = when (page) {
+                MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS, MindPage.CRASH_LOGS -> 0
+                MindPage.ASSISTANT -> 1
+                MindPage.SETTINGS -> 2
+            }
+            val barShape = RoundedCornerShape(50)
             Box(
                 Modifier.fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 18.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.88f))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f), RoundedCornerShape(32.dp))
+                    .padding(horizontal = 22.dp, vertical = 7.dp)
             ) {
-                NavigationBar(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    tonalElevation = 0.dp,
-                    windowInsets = WindowInsets(0, 0, 0, 0)
+                BoxWithConstraints(
+                    Modifier.fillMaxWidth()
+                        .height(64.dp)
+                        .clip(barShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.68f))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f), barShape)
                 ) {
-                    NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { selectTab(MindPage.HOME) }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
-                    NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { selectTab(MindPage.ASSISTANT) }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
-                    NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER, MindPage.LOCAL_MODELS), onClick = { selectTab(MindPage.SETTINGS) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
+                    val cellWidth = maxWidth / 3
+                    val indicatorWidth = cellWidth - 12.dp
+                    val indicatorOffset by animateDpAsState(
+                        targetValue = cellWidth * selectedIndex + 6.dp,
+                        animationSpec = spring(dampingRatio = 0.82f, stiffness = 520f),
+                        label = "navigation-indicator"
+                    )
+                    Box(
+                        Modifier.offset(x = indicatorOffset, y = 7.dp)
+                            .width(indicatorWidth)
+                            .height(50.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f))
+                    )
+                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                        listOf(
+                            Icons.Default.History,
+                            Icons.Default.AutoAwesome,
+                            Icons.Default.Settings
+                        ).forEachIndexed { index, icon ->
+                            Box(
+                                Modifier.weight(1f).fillMaxHeight().clickable {
+                                    selectTab(when (index) {
+                                        0 -> MindPage.HOME
+                                        1 -> MindPage.ASSISTANT
+                                        else -> MindPage.SETTINGS
+                                    })
+                                },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = when (index) { 0 -> "Activity"; 1 -> "Assistant"; else -> "Settings" },
+                                    tint = if (selectedIndex == index) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(if (selectedIndex == index) 27.dp else 24.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -225,12 +276,13 @@ fun MindKeepApp() {
         AnimatedContent(
             targetState = page,
             transitionSpec = {
-                (slideInHorizontally(initialOffsetX = { width -> if (movingForward) width else -width }, animationSpec = tween(280)) + fadeIn(animationSpec = tween(180))) togetherWith
-                    (slideOutHorizontally(targetOffsetX = { width -> if (movingForward) -width else width }, animationSpec = tween(280)) + fadeOut(animationSpec = tween(180)))
+                (slideInHorizontally(initialOffsetX = { width -> if (movingForward) width else -width }, animationSpec = tween(220))) togetherWith
+                    slideOutHorizontally(targetOffsetX = { width -> if (movingForward) -width else width }, animationSpec = tween(220))
             },
             label = "mindkeep-page",
             modifier = Modifier.padding(padding)
         ) { target ->
+            pageStates.SaveableStateProvider(target.name) {
             val edgeTop = if (target in setOf(MindPage.HOME, MindPage.ASSISTANT, MindPage.SETTINGS))
                 WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 12.dp else 8.dp
             when (target) {
@@ -242,10 +294,12 @@ fun MindKeepApp() {
                 MindPage.CONNECTORS -> ConnectorsPage(edgeTop)
                 MindPage.UPDATER -> UpdaterScreen(edgeTop)
                 MindPage.LOCAL_MODELS -> LocalModelsPage(edgeTop)
+                MindPage.CRASH_LOGS -> CrashLogsPage(edgeTop)
                 MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
                     context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
                     introDone = false
-                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { navigate(MindPage.LOCAL_MODELS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
+                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { navigate(MindPage.LOCAL_MODELS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, { navigate(MindPage.CRASH_LOGS) }, edgeTop)
+            }
             }
         }
     }
@@ -474,14 +528,37 @@ private fun HomePage(
                     Text("Recent activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("A timeline of what MindKeep has saved and scheduled.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = onOpenSearch) { Text("Search") }
+                IconButton(onClick = onOpenSearch) { Icon(Icons.Default.Search, contentDescription = "Search activity") }
             }
         }
-        if (activityItems.isEmpty()) {
-            item { EmptyState("Nothing here yet", "Saved notes, tasks and reminders will appear in this timeline.", Icons.Default.Bookmark) }
-        } else {
-            items(activityItems.take(12), key = { it.first.toString() + it.second + it.third.hashCode() }) { event ->
-                ActivityEventRow(event.first, event.second, event.third)
+        item {
+            var activityExpanded by rememberSaveable { mutableStateOf(false) }
+            Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth().clickable { activityExpanded = !activityExpanded }.padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text("Recent activity", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text("${activityItems.size} events · Your recent notes, tasks and alerts", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        IconButton(onClick = { activityExpanded = !activityExpanded }) {
+                            Icon(if (activityExpanded) Icons.Default.ChevronUp else Icons.Default.ChevronDown, contentDescription = if (activityExpanded) "Collapse activity" else "Expand activity")
+                        }
+                    }
+                    androidx.compose.animation.AnimatedVisibility(visible = activityExpanded) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (activityItems.isEmpty()) {
+                                EmptyState("Nothing here yet", "Saved notes, tasks and reminders will appear in this timeline.", Icons.Default.Bookmark)
+                            } else {
+                                activityItems.take(12).forEach { event ->
+                                    ActivityEventRow(event.first, event.second, event.third)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         item {
@@ -646,11 +723,11 @@ private fun ReminderRow(reminder: MindReminder, onToggle: () -> Unit, onDelete: 
 @Composable
 private fun SettingsPage(
     onRequestNotifications: () -> Unit,
-    onResetIntro: () -> Unit,
     onOpenUpdater: () -> Unit,
     onOpenConnectors: () -> Unit,
     onOpenAssistant: () -> Unit,
     onOpenListenerSettings: () -> Unit,
+    onOpenCrashLogs: () -> Unit,
     topPadding: androidx.compose.ui.unit.Dp
 ) {
     val context = LocalContext.current
@@ -696,7 +773,8 @@ private fun SettingsPage(
             SettingsGroup("App preferences", listOf(
                 SettingEntry(Icons.Default.Notifications, "Notifications", if (notificationsAllowed) "Allowed · Local reminders can alert you" else "Disabled · Enable to receive reminders", if (notificationsAllowed) "On" else "Enable", if (notificationsAllowed) null else onRequestNotifications),
                 SettingEntry(Icons.Default.GraphicEq, "Notification access", "Allow MindKeep to capture app notifications", if (hasNotificationListenerAccess(context)) "Allowed" else "Grant", onOpenListenerSettings),
-                SettingEntry(Icons.Default.SystemUpdate, "App updates", "Development and production channels", "Open", onOpenUpdater)
+                SettingEntry(Icons.Default.SystemUpdate, "App updates", "Development and production channels", "Open", onOpenUpdater),
+                SettingEntry(Icons.Default.BugReport, "Crash reports", "View, export and delete diagnostic logs", "Open", onOpenCrashLogs)
             ))
         }
         item {
@@ -707,7 +785,6 @@ private fun SettingsPage(
         }
         item {
             SettingsGroup("About", listOf(
-                SettingEntry(Icons.Default.Info, "Welcome screen", "Show the introduction again", "Open", onResetIntro),
                 SettingEntry(Icons.Default.Code, "Version", "MindKeep 0.1.0 · Main channel", "Info", null)
             ))
         }
