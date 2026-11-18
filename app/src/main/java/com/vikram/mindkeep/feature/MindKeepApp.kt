@@ -113,6 +113,7 @@ import com.vikram.mindkeep.data.MindKeepStore
 import com.vikram.mindkeep.data.MindNote
 import com.vikram.mindkeep.data.MindReminder
 import com.vikram.mindkeep.data.MindTask
+import com.vikram.mindkeep.core.ai.AssistantWorkStore
 import com.vikram.mindkeep.listener.CapturedNotificationStore
 import com.vikram.mindkeep.listener.MindKeepNotificationListenerService
 import com.vikram.mindkeep.data.MindReminderWorker
@@ -341,6 +342,7 @@ private fun HomePage(
         tasks.forEach { add(Triple(it.createdAt, if (it.isDone) "Completed task" else "Added task", it.title)) }
         reminders.forEach { add(Triple(it.dueAt, "Reminder", it.title)) }
         CapturedNotificationStore.all(context).forEach { add(Triple(it.postedAt, "Notification · " + it.appName, (it.title + " " + it.body).trim())) }
+        AssistantWorkStore.all(context).forEach { add(Triple(it.createdAt, "Assistant · " + it.status, it.prompt)) }
     }.sortedByDescending { it.first }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
