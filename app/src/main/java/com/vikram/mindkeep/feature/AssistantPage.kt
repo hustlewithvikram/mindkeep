@@ -80,7 +80,7 @@ fun AssistantPage(topPadding: Dp) {
             if (state.third > 0) downloadPercent = ((state.second * 100) / state.third).toInt().coerceIn(0, 100)
             when (state.first) {
                 DownloadManager.STATUS_SUCCESSFUL -> {
-                    downloadStatus = "Model downloaded and verified by Android."
+                    downloadStatus = "Model download completed."
                     AssistantWorkWorker.resumePending(context)
                     pendingCount = AssistantWorkStore.pending(context).size
                     downloadId = null
@@ -88,7 +88,9 @@ fun AssistantPage(topPadding: Dp) {
                     break
                 }
                 DownloadManager.STATUS_FAILED -> {
-                    downloadStatus = "Download failed. Check your connection and available storage."
+                    LocalAiCatalog.byId(downloadModelId)?.file(context)?.delete()
+                    downloadModelId = null
+                    downloadStatus = "Download failed. The incomplete model file was removed."
                     downloadId = null
                     context.getSharedPreferences("mindkeep_model_downloads", 0).edit().remove("active_id").remove("active_model").apply()
                     break
