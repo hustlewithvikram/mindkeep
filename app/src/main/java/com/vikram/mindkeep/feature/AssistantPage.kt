@@ -231,7 +231,7 @@ fun AssistantPage(topPadding: Dp) {
                             Text(turn.text, Modifier.fillMaxWidth().padding(12.dp), style = MaterialTheme.typography.bodyMedium, color = if (turn.role == "user") MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface)
                         }
                     }
-                    if (answer.isNotBlank()) Text(answer, style = MaterialTheme.typography.bodyMedium)
+                    if (answer.isNotBlank() && generating) Text(answer, style = MaterialTheme.typography.bodyMedium)
                     if (error != null) Text(error!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     OutlinedTextField(
                         value = prompt, onValueChange = { prompt = it },
@@ -253,6 +253,7 @@ fun AssistantPage(topPadding: Dp) {
                                     loadingModel = false
                                     val memory = AssistantMemoryStore.buildContext(context, userText, activeModel.contextTokens * 3)
                                     AssistantMemoryStore.append(context, "user", userText)
+                                    recentTurns = AssistantMemoryStore.recent(context, 8)
                                     val fullPrompt = if (memory.isBlank()) userText else "Relevant conversation memory:\n$memory\n\nCurrent request:\n$userText"
                                     LocalModelRuntime.generate(fullPrompt).collect { answer += it }
                                     AssistantMemoryStore.append(context, "assistant", answer)
