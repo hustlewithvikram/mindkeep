@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vikram.mindkeep.core.ai.AssistantMemoryStore
+import com.vikram.mindkeep.core.ai.AssistantWorkStore
+import com.vikram.mindkeep.core.ai.AssistantWorkWorker
 import com.vikram.mindkeep.core.ai.LocalAiPreferences
 import com.vikram.mindkeep.core.ai.LocalModelRuntime
 import kotlinx.coroutines.launch
@@ -40,8 +42,22 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
     var generating by remember { mutableStateOf(false) }
     var loadingModel by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var pendingCount by remember { mutableIntStateOf(AssistantWorkStore.pending(context).size) }
     val activeModel = remember { LocalAiPreferences.activeModel(context) }
     val messages = turns
+
+    LaunchedEffect(activeModel?.id) {
+        if (activeModel != null) {
+            AssistantWorkWorker.resumePending(context)
+            pendingCount = AssistantWorkStore.pending(context).size
+        }
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            pendingCount = AssistantWorkStore.pending(context).size
+            kotlinx.coroutines.delay(1800)
+        }
+    }
 
     fun sendMessage(value: String) {
         val userText = value.trim()
@@ -179,7 +195,26 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
                         else Icon(Icons.Default.Send, contentDescription = "Send message")
                     }
                 }
-                Text("Local AI · Your messages stay on this device", Modifier.fillMaxWidth(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (pendingCount > 0) "$pendingCount background task(s) waiting or processing" else "Local AI · Your messages stay on this device",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (pendingCount > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline
+                    )
+                    if (prompt.isNotBlank()) {
+                        TextButton(
+                            onClick = {
+                                val queuedPrompt = prompt.trim()
+                                val workId = AssistantWorkStore.enqueue(context, queuedPrompt)
+                                if (LocalAiPreferences.activeModel(context) != null) AssistantWorkWorker.enqueue(context, workId)
+                                prompt = ""
+                                pendingCount = AssistantWorkStore.pending(context).size
+                            },
+                            enabled = !generating
+                        ) { Text("Queue for later") }
+                    }
+                }
             }
         }
     }
