@@ -40,8 +40,8 @@ fun LocalModelsPage(topPadding: Dp) {
     var downloadPercent by remember { mutableIntStateOf(0) }
     var downloadStatus by remember { mutableStateOf<String?>(null) }
     var refresh by remember { mutableIntStateOf(0) }
-    val installed = LocalAiCatalog.models.filter { it.isInstalled(context) }
-    val activeModel = if (autoSelect) LocalAiCatalog.autoSelect(context, installed) else LocalAiCatalog.byId(defaultId)?.takeIf { it.isInstalled(context) }
+    val installed = remember(refresh) { LocalAiCatalog.models.filter { it.isInstalled(context) } }
+    val activeModel = remember(autoSelect, defaultId, refresh, installed) { if (autoSelect) LocalAiCatalog.autoSelect(context, installed) else LocalAiCatalog.byId(defaultId)?.takeIf { it.isInstalled(context) } }
     val availableRam = LocalAiCatalog.availableRamGb(context)
     val availableStorage = LocalAiCatalog.availableStorageGb(context)
 
