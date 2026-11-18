@@ -94,10 +94,17 @@ fun AssistantPage(topPadding: Dp) {
             if (state.third > 0) downloadPercent = ((state.second * 100) / state.third).toInt().coerceIn(0, 100)
             when (state.first) {
                 DownloadManager.STATUS_SUCCESSFUL -> {
-                    downloadStatus = "Model download completed."
-                    AssistantWorkWorker.resumePending(context)
-                    pendingCount = AssistantWorkStore.pending(context).size
+                    val downloadedModel = LocalAiCatalog.byId(downloadModelId)
+                    if (downloadedModel?.isInstalled(context) == true) {
+                        downloadStatus = "Model download completed."
+                        AssistantWorkWorker.resumePending(context)
+                        pendingCount = AssistantWorkStore.pending(context).size
+                    } else {
+                        downloadedModel?.file(context)?.delete()
+                        downloadStatus = "The downloaded file was incomplete and has been removed. Try again."
+                    }
                     downloadId = null
+                    downloadModelId = null
                     context.getSharedPreferences("mindkeep_model_downloads", 0).edit().remove("active_id").remove("active_model").apply()
                     break
                 }
