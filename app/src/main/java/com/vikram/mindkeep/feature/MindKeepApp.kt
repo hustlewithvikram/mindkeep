@@ -381,8 +381,9 @@ private fun HomePage(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("TODAY", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Text("Your context, in one place.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("Your personal context, quietly organised.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                Text("A live overview of what MindKeep is keeping track of.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
         }
         item {
@@ -434,6 +435,12 @@ private fun HomePage(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryCard("Open tasks", pendingTasks.toString(), Icons.Default.TaskAlt, Modifier.weight(1f), onOpenTasks)
                 SummaryCard("Saved notes", notes.size.toString(), Icons.Default.Bookmark, Modifier.weight(1f), onOpenSearch)
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SummaryCard("Captured alerts", capturedNotifications.size.toString(), Icons.Default.Notifications, Modifier.weight(1f), onOpenSearch)
+                SummaryCard("AI conversations", assistantTurns.count { it.role == "assistant" }.toString(), Icons.Default.AutoAwesome, Modifier.weight(1f), onOpenSearch)
             }
         }
         item {
@@ -658,7 +665,7 @@ private fun SettingsPage(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text("Settings", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("Make MindKeep work the way you want.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Personalise your AI, privacy and daily workflows.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
