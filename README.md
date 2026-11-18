@@ -6,7 +6,7 @@ MindKeep is an offline-first personal assistant and second brain for Android. It
 - Kotlin, Jetpack Compose and Material 3
 - Application ID / namespace: com.vikram.mindkeep
 - Feature-oriented architecture with domain, data and core layers
-- Room + DataStore for local persistence
+- App-private local persistence (SharedPreferences and append-only JSONL today; Room/DataStore migration remains planned)
 - WorkManager for deferrable background work
 - Navigation Compose
 - On-device AI behind a replaceable runtime interface
