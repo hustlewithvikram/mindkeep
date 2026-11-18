@@ -88,7 +88,11 @@ fun AssistantPage(topPadding: Dp) {
                 }
             }
             if (state == null) {
-                downloadStatus = "Download no longer exists."
+                LocalAiCatalog.byId(downloadModelId)?.file(context)?.delete()
+                downloadModelId = null
+                downloadId = null
+                context.getSharedPreferences("mindkeep_model_downloads", 0).edit().remove("active_id").remove("active_model").apply()
+                downloadStatus = "Download no longer exists. The incomplete file was removed."
                 break
             }
             if (state.third > 0) downloadPercent = ((state.second * 100) / state.third).toInt().coerceIn(0, 100)
@@ -128,6 +132,7 @@ fun AssistantPage(topPadding: Dp) {
         }
         val target = model.file(context)
         target.parentFile?.mkdirs()
+        target.delete()
         val request = DownloadManager.Request(Uri.parse(model.downloadUrl))
             .setTitle("MindKeep · ${model.name}")
             .setDescription("Downloading on-device AI model")
