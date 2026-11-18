@@ -280,7 +280,7 @@ fun AssistantPage(topPadding: Dp) {
                             val queuedPrompt = prompt.trim()
                             if (queuedPrompt.isNotEmpty()) {
                                 val workId = AssistantWorkStore.enqueue(context, queuedPrompt)
-                                AssistantWorkWorker.enqueue(context, workId)
+                                if (LocalAiPreferences.activeModel(context) != null) AssistantWorkWorker.enqueue(context, workId)
                                 prompt = ""
                                 pendingCount = AssistantWorkStore.pending(context).size
                                 downloadStatus = "Saved to background queue. It will resume when a compatible local model is ready."
