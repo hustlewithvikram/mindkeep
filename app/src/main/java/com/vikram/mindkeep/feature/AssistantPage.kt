@@ -96,7 +96,7 @@ fun AssistantPage(topPadding: Dp) {
         val target = model.file(context)
         target.parentFile?.mkdirs()
         val request = DownloadManager.Request(Uri.parse(model.downloadUrl))
-            .setTitle("MindKeep · \${model.name}")
+            .setTitle("MindKeep · ${model.name}")
             .setDescription("Downloading on-device AI model")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalFilesDir(context, "models", model.fileName)
@@ -107,7 +107,7 @@ fun AssistantPage(topPadding: Dp) {
             .putLong("active_id", id).putString("active_model", model.id).apply()
         downloadModelId = model.id
         downloadPercent = 0
-        downloadStatus = "Downloading \${model.name}…"
+        downloadStatus = "Downloading ${model.name}…"
         downloadId = id
     }
 
@@ -137,8 +137,8 @@ fun AssistantPage(topPadding: Dp) {
                     Text(activeModel?.name ?: "Choose your first model", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                     Text(activeModel?.description ?: "Download a model below. MindKeep will run it locally and keep your conversations on this device.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ModelMetric("Free RAM", "\${availableRam} GB")
-                        ModelMetric("Model storage", "\${availableStorage} GB free")
+                        ModelMetric("Free RAM", "${availableRam} GB")
+                        ModelMetric("Model storage", "${availableStorage} GB free")
                         ModelMetric("Saved turns", memoryCount.toString())
                     }
                 }
@@ -170,7 +170,7 @@ fun AssistantPage(topPadding: Dp) {
                     Text("Model library", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("Download only the models you want to keep.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                AssistChip(onClick = {}, label = { Text("\${installed.size} installed") }, leadingIcon = { Icon(Icons.Default.Memory, null) })
+                AssistChip(onClick = {}, label = { Text("${installed.size} installed") }, leadingIcon = { Icon(Icons.Default.Memory, null) })
             }
         }
         items(LocalAiCatalog.models, key = { it.id }) { model ->
@@ -187,7 +187,7 @@ fun AssistantPage(topPadding: Dp) {
                     defaultId = model.id
                     autoSelect = false
                     LocalAiPreferences.setAutoSelectEnabled(context, false)
-                    downloadStatus = "\${model.name} set as the default model."
+                    downloadStatus = "${model.name} set as the default model."
                 },
                 onDelete = {
                     model.file(context).delete()
@@ -286,7 +286,7 @@ private fun ModelCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(model.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("\${model.family} · \${model.tier}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text("${model.family} · ${model.tier}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }
                 if (selected) AssistChip(onClick = {}, label = { Text("Default") }, leadingIcon = { Icon(Icons.Default.CheckCircle, null) })
                 else if (recommended) AssistChip(onClick = {}, label = { Text("Fits RAM") })
@@ -294,10 +294,10 @@ private fun ModelCard(
             Text(model.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 ModelSpec("Download", model.sizeLabel)
-                ModelSpec("Free RAM needed", "\${model.minimumFreeRamGb}+ GB")
-                ModelSpec("Context", "\${model.contextTokens / 1000}K")
+                ModelSpec("Free RAM needed", "${model.minimumFreeRamGb}+ GB")
+                ModelSpec("Context", "${model.contextTokens / 1000}K")
             }
-            Text("Licence: \${model.license}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text("Licence: ${model.license}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             if (downloading) {
                 LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
                 Text("Downloading · $progress%", style = MaterialTheme.typography.labelMedium)
