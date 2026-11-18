@@ -123,7 +123,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, CONNECTORS, UPDATER, SETTINGS }
+private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, CONNECTORS, UPDATER, LOCAL_MODELS, SETTINGS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,13 +171,14 @@ fun MindKeepApp() {
     }
 
     BackHandler(enabled = backStack.size > 1) { goBack() }
-    val isSubpage = page in setOf(MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER)
+    val isSubpage = page in setOf(MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER, MindPage.LOCAL_MODELS)
     val pageTitle = when (page) {
         MindPage.SEARCH -> "Search"
         MindPage.TASKS -> "Tasks"
         MindPage.REMINDERS -> "Reminders"
         MindPage.CONNECTORS -> "Integrations"
         MindPage.UPDATER -> "App updater"
+        MindPage.LOCAL_MODELS -> "Local AI models"
         else -> ""
     }
     Scaffold(
@@ -189,10 +190,23 @@ fun MindKeepApp() {
             }
         },
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { selectTab(MindPage.HOME) }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
-                NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { selectTab(MindPage.ASSISTANT) }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
-                NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER), onClick = { selectTab(MindPage.SETTINGS) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
+            Box(
+                Modifier.fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 18.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.88f))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f), RoundedCornerShape(32.dp))
+            ) {
+                NavigationBar(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    tonalElevation = 0.dp,
+                    windowInsets = WindowInsets(0)
+                ) {
+                    NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { selectTab(MindPage.HOME) }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
+                    NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { selectTab(MindPage.ASSISTANT) }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
+                    NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER, MindPage.LOCAL_MODELS), onClick = { selectTab(MindPage.SETTINGS) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
+                }
             }
         },
         floatingActionButton = {
@@ -219,16 +233,17 @@ fun MindKeepApp() {
                 WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 12.dp else 8.dp
             when (target) {
                 MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { navigate(MindPage.TASKS) }, { navigate(MindPage.REMINDERS) }, { navigate(MindPage.SEARCH) }, { askForNotifications() }, { navigate(MindPage.CONNECTORS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
-                MindPage.ASSISTANT -> AssistantPage(edgeTop)
+                MindPage.ASSISTANT -> AssistantPage(edgeTop) { navigate(MindPage.LOCAL_MODELS) }
                 MindPage.SEARCH -> SearchPage(notes, tasks, edgeTop)
                 MindPage.TASKS -> TasksPage(tasks, { task -> tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveTasks(context, tasks) }, { task -> tasks = tasks.filterNot { it.id == task.id }; MindKeepStore.saveTasks(context, tasks) }, { navigate(MindPage.REMINDERS) }, edgeTop)
                 MindPage.REMINDERS -> RemindersPage(reminders, { reminder -> reminders = reminders.map { if (it.id == reminder.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, { reminder -> reminders = reminders.filterNot { it.id == reminder.id }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, edgeTop)
                 MindPage.CONNECTORS -> ConnectorsPage(edgeTop)
                 MindPage.UPDATER -> UpdaterScreen(edgeTop)
+                MindPage.LOCAL_MODELS -> LocalModelsPage(edgeTop)
                 MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
                     context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
                     introDone = false
-                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { selectTab(MindPage.ASSISTANT) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
+                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { navigate(MindPage.LOCAL_MODELS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
             }
         }
     }
@@ -678,7 +693,7 @@ private fun SettingsPage(
         item {
             SettingsGroup("Privacy and storage", listOf(
                 SettingEntry(Icons.Default.Security, "Your data", "Notes, tasks and memories are stored locally", "On device", null),
-                SettingEntry(Icons.Default.Storage, "Storage", "Model files can be removed from Assistant", "Manage", onOpenAssistant)
+                SettingEntry(Icons.Default.Storage, "Storage", "Model files can be removed from Local AI models", "Manage", onOpenAssistant)
             ))
         }
         item {
