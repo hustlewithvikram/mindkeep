@@ -144,7 +144,7 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
                     }
                 }
             }
-            items(messages, key = { "${it.timestamp}-${it.role}" }) { turn ->
+            items(messages, key = { "${it.timestamp}-${it.role}-${it.text.hashCode()}" }) { turn ->
                 ChatMessageBubble(turn.role, turn.text, turn.timestamp)
             }
             if (generating && response.isBlank()) {
