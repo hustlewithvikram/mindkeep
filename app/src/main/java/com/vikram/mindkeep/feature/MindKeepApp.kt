@@ -649,3 +649,57 @@ private fun ReminderDialog(onDismiss: () -> Unit, onSave: (String, Int) -> Unit)
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
+
+
+@Composable
+private fun AssistantPage(onOpenSettings: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
+            Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("Think with your second brain.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("Ask questions, connect ideas and bring your saved knowledge back when you need it.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+        ) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.primary)
+                    Text("On-device AI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                }
+                Text("The local AI runtime is not connected yet. Your notes and tasks already work offline; AI chat will become available when an on-device model is added.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AssistChip(onClick = {}, enabled = false, label = { Text("Model not installed") })
+                Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) { Text("AI and app settings") }
+            }
+        }
+        Text("What MindKeep will help with", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        FeaturePreviewRow("Recall", "Find details from your saved notes.")
+        FeaturePreviewRow("Connect", "Spot relationships between ideas and projects.")
+        FeaturePreviewRow("Plan", "Turn thoughts into clear next steps.")
+        Text("Your content stays on this device. Cloud AI is not used as a fallback.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+    }
+}
+
+@Composable
+private fun FeaturePreviewRow(title: String, description: String) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(38.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
