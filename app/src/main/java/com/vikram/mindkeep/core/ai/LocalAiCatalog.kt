@@ -17,7 +17,7 @@ object LocalAiCatalog {
  fun byId(id:String?)=models.firstOrNull{it.id==id}
  fun availableRamGb(context:Context):Int { val m=context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager; val i=ActivityManager.MemoryInfo();m.getMemoryInfo(i);return (i.availMem/(1024L*1024L*1024L)).toInt() }
  fun availableStorageGb(context:Context):Long { val p=context.getExternalFilesDir("models") ?: context.filesDir;return StatFs(p.absolutePath).availableBytes/(1024L*1024L*1024L) }
- fun autoSelect(context:Context,installed:List<LocalAiModel>):LocalAiModel? { if(installed.isEmpty())return null;val ram=availableRamGb(context);return installed.filter{ram>=it.minimumFreeRamGb}.maxByOrNull{it.minimumFreeRamGb} ?: installed.minByOrNull{it.minimumFreeRamGb} }
+ fun autoSelect(context:Context,installed:List<LocalAiModel>):LocalAiModel? { if(installed.isEmpty())return null;val ram=availableRamGb(context);return installed.filter{ram>=it.minimumFreeRamGb}.maxByOrNull{it.minimumFreeRamGb} }
 }
 object LocalAiPreferences {
  private const val PREFS="mindkeep_ai_preferences"
