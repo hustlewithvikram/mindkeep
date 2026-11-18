@@ -80,6 +80,8 @@ fun AssistantPage(topPadding: Dp) {
             when (state.first) {
                 DownloadManager.STATUS_SUCCESSFUL -> {
                     downloadStatus = "Model downloaded and verified by Android."
+                    AssistantWorkWorker.resumePending(context)
+                    pendingCount = AssistantWorkStore.pending(context).size
                     downloadId = null
                     context.getSharedPreferences("mindkeep_model_downloads", 0).edit().remove("active_id").remove("active_model").apply()
                     break
