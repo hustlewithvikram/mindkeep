@@ -52,6 +52,7 @@ fun AssistantPage(topPadding: Dp) {
     var loadingModel by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var memoryCount by remember { mutableIntStateOf(AssistantMemoryStore.recent(context, 10000).size) }
+    var recentTurns by remember { mutableStateOf(AssistantMemoryStore.recent(context, 8)) }
     var pendingCount by remember { mutableIntStateOf(AssistantWorkStore.pending(context).size) }
     val installed = LocalAiCatalog.models.filter { it.isInstalled(context) }
     val activeModel = if (autoSelect) LocalAiCatalog.autoSelect(context, installed) else LocalAiCatalog.byId(defaultId)?.takeIf { it.isInstalled(context) }
@@ -219,6 +220,11 @@ fun AssistantPage(topPadding: Dp) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Try your assistant", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("Your conversation history is stored locally. Relevant older turns are retrieved into each prompt so the model can remember beyond a single context window.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    recentTurns.forEach { turn ->
+                        Surface(shape = RoundedCornerShape(16.dp), color = if (turn.role == "user") MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh) {
+                            Text(turn.text, Modifier.fillMaxWidth().padding(12.dp), style = MaterialTheme.typography.bodyMedium, color = if (turn.role == "user") MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
                     if (answer.isNotBlank()) Text(answer, style = MaterialTheme.typography.bodyMedium)
                     if (error != null) Text(error!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     OutlinedTextField(
@@ -239,11 +245,12 @@ fun AssistantPage(topPadding: Dp) {
                                     loadingModel = true
                                     LocalModelRuntime.load(activeModel.file(context))
                                     loadingModel = false
-                                    val memory = AssistantMemoryStore.buildContext(context, userText)
+                                    val memory = AssistantMemoryStore.buildContext(context, userText, activeModel.contextTokens * 3)
                                     AssistantMemoryStore.append(context, "user", userText)
                                     val fullPrompt = if (memory.isBlank()) userText else "Relevant conversation memory:\n$memory\n\nCurrent request:\n$userText"
                                     LocalModelRuntime.generate(fullPrompt).collect { answer += it }
                                     AssistantMemoryStore.append(context, "assistant", answer)
+                                    recentTurns = AssistantMemoryStore.recent(context, 8)
                                     memoryCount = AssistantMemoryStore.recent(context, 10000).size
                                 } catch (t: Throwable) {
                                     error = t.message ?: "The local model could not run on this device."
