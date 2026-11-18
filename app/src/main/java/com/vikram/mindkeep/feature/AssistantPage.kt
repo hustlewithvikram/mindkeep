@@ -184,7 +184,7 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
                         minLines = 1,
                         maxLines = 5,
                         shape = RoundedCornerShape(26.dp),
-                        enabled = activeModel != null && !generating
+                        enabled = !generating
                     )
                     FilledIconButton(
                         onClick = { sendMessage(prompt) },
