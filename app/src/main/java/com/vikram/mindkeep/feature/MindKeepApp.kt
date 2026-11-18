@@ -18,8 +18,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.ChevronUp
-import androidx.compose.material.icons.filled.ChevronDown
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.History
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.foundation.layout.offset
@@ -537,7 +537,7 @@ private fun HomePage(
                             Icon(Icons.Default.Search, contentDescription = "Search activity")
                         }
                         IconButton(onClick = { activityExpanded = !activityExpanded }) {
-                            Icon(if (activityExpanded) Icons.Default.ChevronUp else Icons.Default.ChevronDown, contentDescription = if (activityExpanded) "Collapse activity" else "Expand activity")
+                            Icon(if (activityExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = if (activityExpanded) "Collapse activity" else "Expand activity")
                         }
                     }
                     androidx.compose.animation.AnimatedVisibility(visible = activityExpanded) {
