@@ -665,8 +665,8 @@ private fun SettingsPage(
         }
         item {
             SettingsGroup("App preferences", listOf(
-                SettingEntry(Icons.Default.Notifications, "Notifications", if (notificationsAllowed) "Allowed · Local reminders can alert you" else "Disabled · Enable to receive reminders", if (notificationsAllowed) "On" else "Enable", onRequestNotifications),
-                SettingEntry(Icons.Default.GraphicEq, "Notification access", "Allow MindKeep to capture app notifications", "System", onOpenListenerSettings),
+                SettingEntry(Icons.Default.Notifications, "Notifications", if (notificationsAllowed) "Allowed · Local reminders can alert you" else "Disabled · Enable to receive reminders", if (notificationsAllowed) "On" else "Enable", if (notificationsAllowed) null else onRequestNotifications),
+                SettingEntry(Icons.Default.GraphicEq, "Notification access", "Allow MindKeep to capture app notifications", if (hasNotificationListenerAccess(context)) "Allowed" else "Grant", onOpenListenerSettings),
                 SettingEntry(Icons.Default.SystemUpdate, "App updates", "Development and production channels", "Open", onOpenUpdater)
             ))
         }
@@ -704,7 +704,7 @@ private fun SettingsGroup(title: String, entries: List<SettingEntry>) {
             Column {
                 entries.forEachIndexed { index, entry ->
                     Row(
-                        Modifier.fillMaxWidth().then(if (entry.onClick != null) Modifier.clickable(onClick = entry.onClick) else Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
+                        Modifier.fillMaxWidth().then(entry.onClick?.let { Modifier.clickable(onClick = it) } ?: Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(13.dp)
                     ) {
