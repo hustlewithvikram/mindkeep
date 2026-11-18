@@ -59,6 +59,13 @@ fun AssistantPage(topPadding: Dp) {
     val availableRam = LocalAiCatalog.availableRamGb(context)
     val availableStorage = LocalAiCatalog.availableStorageGb(context)
 
+    LaunchedEffect(activeModel?.id) {
+        if (activeModel != null) {
+            AssistantWorkWorker.resumePending(context)
+            pendingCount = AssistantWorkStore.pending(context).size
+        }
+    }
+
     LaunchedEffect(downloadId) {
         val id = downloadId ?: return@LaunchedEffect
         while (true) {
