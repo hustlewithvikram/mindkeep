@@ -25,8 +25,7 @@ object LocalModelRuntime {
    require(modelFile.isFile && modelFile.length()>0L){"Model file is missing or incomplete."}
    if(loadedPath==modelFile.absolutePath && engine!=null && conversation!=null)return@withLock
    closeLocked()
-   val backend = if (modelFile.name.startsWith("gemma-4", ignoreCase = true)) Backend.GPU() else Backend.CPU()
-   val next=Engine(EngineConfig(modelPath=modelFile.absolutePath, backend=backend))
+   val next=Engine(EngineConfig(modelPath=modelFile.absolutePath, backend=Backend.CPU()))
    try {
     next.initialize()
     val chat=next.createConversation(ConversationConfig(systemInstruction=Contents.of("You are MindKeep, a private personal assistant running entirely on this device. Be accurate, concise, organise information clearly, and never claim to perform actions unless the app confirms them. Use supplied personal memory only when relevant.")))
