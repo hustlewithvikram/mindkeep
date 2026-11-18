@@ -3,11 +3,15 @@ package com.vikram.mindkeep.feature
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -110,7 +115,12 @@ fun MindKeepApp() {
     val context = LocalContext.current
     var introDone by remember { mutableStateOf(MindKeepStore.hasCompletedIntro(context)) }
     var splashVisible by remember { mutableStateOf(true) }
-    var page by rememberSaveable { mutableStateOf(MindPage.HOME) }
+    var backStack by rememberSaveable { mutableStateOf(listOf(MindPage.HOME)) }
+    val page = backStack.last()
+    var movingForward by remember { mutableStateOf(true) }
+    fun navigate(destination: MindPage) { if (destination != backStack.last()) { movingForward = true; backStack = backStack + destination } }
+    fun selectTab(destination: MindPage) { movingForward = true; backStack = listOf(destination) }
+    fun goBack() { if (backStack.size > 1) { movingForward = false; backStack = backStack.dropLast(1) } }
     var notes by remember { mutableStateOf(MindKeepStore.loadNotes(context)) }
     var tasks by remember { mutableStateOf(MindKeepStore.loadTasks(context)) }
     var reminders by remember { mutableStateOf(MindKeepStore.loadReminders(context)) }
@@ -144,40 +154,65 @@ fun MindKeepApp() {
         return
     }
 
+    BackHandler(enabled = backStack.size > 1) { goBack() }
+    val isSubpage = page in setOf(MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS, MindPage.UPDATER)
+    val pageTitle = when (page) {
+        MindPage.SEARCH -> "Search"
+        MindPage.TASKS -> "Tasks"
+        MindPage.REMINDERS -> "Reminders"
+        MindPage.CONNECTORS -> "Integrations"
+        MindPage.UPDATER -> "App updater"
+        else -> ""
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            if (isSubpage) Row(Modifier.fillMaxWidth().statusBarsPadding().height(56.dp).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { goBack() }) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
+                Text(pageTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            }
+        },
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { page = MindPage.ASSISTANT }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
-                NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { page = MindPage.HOME }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
-                NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER), onClick = { page = MindPage.SETTINGS }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
+                NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { selectTab(MindPage.HOME) }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
+                NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { selectTab(MindPage.ASSISTANT) }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
+                NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER), onClick = { selectTab(MindPage.SETTINGS) }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
             }
         },
         floatingActionButton = {
-            if (page == MindPage.HOME || page == MindPage.TASKS || page == MindPage.REMINDERS) {
-                FloatingActionButton(onClick = { when (page) {
+            if (page == MindPage.HOME || page == MindPage.TASKS || page == MindPage.REMINDERS) FloatingActionButton(onClick = {
+                when (page) {
                     MindPage.HOME -> showNoteDialog = true
                     MindPage.TASKS -> showTaskDialog = true
                     MindPage.REMINDERS -> showReminderDialog = true
                     else -> Unit
-                } }) { Icon(Icons.Default.Add, contentDescription = "Add") }
-            }
+                }
+            }) { Icon(Icons.Default.Add, contentDescription = "Add") }
         }
     ) { padding ->
-        AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "mindkeep-page", modifier = Modifier.padding(padding)) { target ->
-            val edgeTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp
+        AnimatedContent(
+            targetState = page,
+            transitionSpec = {
+                (slideInHorizontally(initialOffsetX = { width -> if (movingForward) width else -width }, animationSpec = tween(280)) + fadeIn(animationSpec = tween(180))) togetherWith
+                    (slideOutHorizontally(targetOffsetX = { width -> if (movingForward) -width else width }, animationSpec = tween(280)) + fadeOut(animationSpec = tween(180)))
+            },
+            label = "mindkeep-page",
+            modifier = Modifier.padding(padding)
+        ) { target ->
+            val edgeTop = if (target in setOf(MindPage.HOME, MindPage.ASSISTANT, MindPage.SETTINGS))
+                WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 12.dp else 8.dp
             when (target) {
-                MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { page = MindPage.TASKS }, { page = MindPage.REMINDERS }, { page = MindPage.SEARCH }, { askForNotifications() }, { page = MindPage.CONNECTORS }, edgeTop)
-                MindPage.ASSISTANT -> AssistantPage({ page = MindPage.SETTINGS }, edgeTop)
+                MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { navigate(MindPage.TASKS) }, { navigate(MindPage.REMINDERS) }, { navigate(MindPage.SEARCH) }, { askForNotifications() }, { navigate(MindPage.CONNECTORS) }, edgeTop)
+                MindPage.ASSISTANT -> AssistantPage(edgeTop)
                 MindPage.SEARCH -> SearchPage(notes, tasks, edgeTop)
-                MindPage.TASKS -> TasksPage(tasks, { task -> tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveTasks(context, tasks) }, { task -> tasks = tasks.filterNot { it.id == task.id }; MindKeepStore.saveTasks(context, tasks) }, { page = MindPage.REMINDERS }, edgeTop)
+                MindPage.TASKS -> TasksPage(tasks, { task -> tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveTasks(context, tasks) }, { task -> tasks = tasks.filterNot { it.id == task.id }; MindKeepStore.saveTasks(context, tasks) }, { navigate(MindPage.REMINDERS) }, edgeTop)
                 MindPage.REMINDERS -> RemindersPage(reminders, { reminder -> reminders = reminders.map { if (it.id == reminder.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, { reminder -> reminders = reminders.filterNot { it.id == reminder.id }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, edgeTop)
                 MindPage.CONNECTORS -> ConnectorsPage(edgeTop)
                 MindPage.UPDATER -> UpdaterScreen(edgeTop)
                 MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
                     context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
                     introDone = false
-                }, { page = MindPage.UPDATER }, { page = MindPage.CONNECTORS }, edgeTop)
+                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, edgeTop)
             }
         }
     }
@@ -618,55 +653,3 @@ private fun ReminderDialog(onDismiss: () -> Unit, onSave: (String, Int) -> Unit)
 }
 
 
-@Composable
-private fun AssistantPage(onOpenSettings: () -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
-    Column(
-        Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        ) {
-            Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("Your AI, always within reach.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("MindKeep is designed to observe permitted context, organise what matters and act through the tools you connect.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-        }
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-        ) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.primary)
-                    Text("On-device AI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                }
-                Text("The background listener, on-device model runtime and tool execution are not wired yet. No background monitoring is happening yet.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                AssistChip(onClick = {}, enabled = false, label = { Text("Model not installed") })
-                Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) { Text("AI and app settings") }
-            }
-        }
-        Text("What MindKeep will help with", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        FeaturePreviewRow("Listen", "Capture context only from sources you explicitly enable.")
-        FeaturePreviewRow("Connect", "Use Google services and MCP tools with your permission.")
-        FeaturePreviewRow("Act", "Create reminders, calendar events and tasks when asked.")
-        Text("Your content stays on this device. Cloud AI is not used as a fallback.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
-    }
-}
-
-@Composable
-private fun FeaturePreviewRow(title: String, description: String) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(38.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
