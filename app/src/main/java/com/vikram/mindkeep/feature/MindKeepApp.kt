@@ -451,7 +451,7 @@ private fun HomePage(
         if (activityItems.isEmpty()) {
             item { EmptyState("Nothing here yet", "Saved notes, tasks and reminders will appear in this timeline.", Icons.Default.Bookmark) }
         } else {
-            items(activityItems.take(12), key = { it.first }) { event ->
+            items(activityItems.take(12), key = { it.first.toString() + it.second + it.third.hashCode() }) { event ->
                 ActivityEventRow(event.first, event.second, event.third)
             }
         }
