@@ -21,7 +21,7 @@ class AssistantWorkWorker(context:Context,params:WorkerParameters):CoroutineWork
   return try {
    AssistantWorkStore.update(applicationContext,id,"running")
    LocalModelRuntime.load(model.file(applicationContext))
-   val memory=AssistantMemoryStore.buildContext(applicationContext,item.prompt)
+   val memory=AssistantMemoryStore.buildContext(applicationContext,item.prompt,model.contextTokens * 3)
    AssistantMemoryStore.append(applicationContext,"user",item.prompt)
    val prompt=if(memory.isBlank())item.prompt else "Relevant conversation memory:\n$memory\n\nCurrent request:\n${item.prompt}"
    val output=StringBuilder()
