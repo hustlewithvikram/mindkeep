@@ -25,6 +25,7 @@ import com.vikram.mindkeep.core.ai.AssistantMemoryStore
 import com.vikram.mindkeep.core.ai.LocalAiPreferences
 import com.vikram.mindkeep.core.ai.LocalModelRuntime
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
