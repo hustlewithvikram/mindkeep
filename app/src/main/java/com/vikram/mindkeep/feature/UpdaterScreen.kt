@@ -105,7 +105,7 @@ fun UpdaterScreen(topPadding:Dp) {
   ContextCompat.registerReceiver(context,receiver,IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),ContextCompat.RECEIVER_EXPORTED)
   onDispose{runCatching{context.unregisterReceiver(receiver)}}
  }
- LaunchedEffect(Unit){if(!apkReady && downloadId==null)apkFile.delete();checkAgain()}
+ LaunchedEffect(Unit){if(!apkReady && downloadId==null)apkFile.delete()}
  LaunchedEffect(channel){checkAgain()}
  LaunchedEffect(downloadId){
   val id=downloadId ?: return@LaunchedEffect
