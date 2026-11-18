@@ -31,3 +31,20 @@ Open the project in Android Studio with JDK 17 and Android SDK 37 installed, syn
 
 ## Current status
 This scaffold establishes the Android app, Gradle configuration, Material 3 theme, navigation entry point and feature boundaries. Database schemas, AI inference, capture services and reminder scheduling are not implemented yet.
+
+
+## GitHub Actions builds
+
+Two workflows are included:
+
+- **Debug APK** — runs on every branch push, signs the debug APK with the CI keystore, and publishes a GitHub prerelease containing the APK, SHA-256 checksum, recent commit changelog, full commit SHA, branch and workflow run.
+- **Release APK** — manually started from Actions → Release APK → Run workflow. Enter a version; the workflow builds and signs the release APK and publishes a normal GitHub Release.
+
+Both variants use the same upload keystore. Add these repository Actions secrets before the first workflow run:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+The signing key must be backed up securely. Never commit the keystore or its passwords. The repository ignores `.jks`, `.keystore` and `.p12` files.
