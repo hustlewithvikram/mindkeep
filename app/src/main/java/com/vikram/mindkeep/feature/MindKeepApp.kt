@@ -219,7 +219,7 @@ fun MindKeepApp() {
                 MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
                     context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
                     introDone = false
-                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, edgeTop)
+                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { selectTab(MindPage.ASSISTANT) }, edgeTop)
             }
         }
     }
@@ -577,6 +577,7 @@ private fun SettingsPage(
     onResetIntro: () -> Unit,
     onOpenUpdater: () -> Unit,
     onOpenConnectors: () -> Unit,
+    onOpenAssistant: () -> Unit,
     topPadding: androidx.compose.ui.unit.Dp
 ) {
     val context = LocalContext.current
@@ -609,8 +610,8 @@ private fun SettingsPage(
         }
         item {
             SettingsGroup("Assistant", listOf(
-                SettingEntry(Icons.Default.AutoAwesome, "Local AI models", "Download and manage on-device models", "Assistant", {}),
-                SettingEntry(Icons.Default.Memory, "Personal memory", "Conversation history stays on this device", "Local", {})
+                SettingEntry(Icons.Default.AutoAwesome, "Local AI models", "Download and manage on-device models", "Open", onOpenAssistant),
+                SettingEntry(Icons.Default.Memory, "Personal memory", "Conversation history stays on this device", "Local", null)
             ))
         }
         item {
@@ -626,14 +627,14 @@ private fun SettingsPage(
         }
         item {
             SettingsGroup("Privacy and storage", listOf(
-                SettingEntry(Icons.Default.Security, "Your data", "Notes, tasks and memories are stored locally", "On device", {}),
-                SettingEntry(Icons.Default.Storage, "Storage", "Model files can be removed from Assistant", "Manage", {})
+                SettingEntry(Icons.Default.Security, "Your data", "Notes, tasks and memories are stored locally", "On device", null),
+                SettingEntry(Icons.Default.Storage, "Storage", "Model files can be removed from Assistant", "Manage", onOpenAssistant)
             ))
         }
         item {
             SettingsGroup("About", listOf(
                 SettingEntry(Icons.Default.Info, "Welcome screen", "Show the introduction again", "Open", onResetIntro),
-                SettingEntry(Icons.Default.Code, "Version", "MindKeep 0.1.0 · Main channel", "Info", {})
+                SettingEntry(Icons.Default.Code, "Version", "MindKeep 0.1.0 · Main channel", "Info", null)
             ))
         }
         item {
@@ -647,7 +648,7 @@ private data class SettingEntry(
     val title: String,
     val subtitle: String,
     val trailing: String,
-    val onClick: () -> Unit
+    val onClick: (() -> Unit)?
 )
 
 @Composable
@@ -658,7 +659,7 @@ private fun SettingsGroup(title: String, entries: List<SettingEntry>) {
             Column {
                 entries.forEachIndexed { index, entry ->
                     Row(
-                        Modifier.fillMaxWidth().clickable(onClick = entry.onClick).padding(horizontal = 15.dp, vertical = 14.dp),
+                        Modifier.fillMaxWidth().then(if (entry.onClick != null) Modifier.clickable(onClick = entry.onClick) else Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(13.dp)
                     ) {
@@ -670,7 +671,7 @@ private fun SettingsGroup(title: String, entries: List<SettingEntry>) {
                             Text(entry.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text(entry.trailing, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline)
+                        if (entry.onClick != null) Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline)
                     }
                     if (index != entries.lastIndex) HorizontalDivider(Modifier.padding(start = 70.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
                 }
