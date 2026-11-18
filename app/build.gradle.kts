@@ -18,7 +18,7 @@ if (!signingStorePath.isNullOrBlank()) {
 
 android {
     namespace = "com.vikram.mindkeep"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.vikram.mindkeep"
