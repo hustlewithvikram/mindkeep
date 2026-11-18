@@ -22,6 +22,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
+        buildConfigField("String", "GIT_COMMIT", "\"${System.getenv("GITHUB_SHA") ?: "local"}\"")
         applicationId = "com.vikram.mindkeep"
         minSdk = 26
         targetSdk = 36
@@ -36,9 +37,6 @@ android {
         buildConfig = true
     }
 
-    defaultConfig {
-        buildConfigField("String", "GIT_COMMIT", "\"${System.getenv("GITHUB_SHA") ?: "local"}\"")
-    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
