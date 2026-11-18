@@ -1,4 +1,5 @@
 package com.vikram.mindkeep.core.ai
+import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
@@ -24,7 +25,8 @@ object LocalModelRuntime {
    require(modelFile.isFile && modelFile.length()>0L){"Model file is missing or incomplete."}
    if(loadedPath==modelFile.absolutePath && engine!=null && conversation!=null)return@withLock
    closeLocked()
-   val next=Engine(EngineConfig(modelPath=modelFile.absolutePath))
+   val backend = if (modelFile.name.startsWith("gemma-4", ignoreCase = true)) Backend.GPU() else Backend.CPU()
+   val next=Engine(EngineConfig(modelPath=modelFile.absolutePath, backend=backend))
    try {
     next.initialize()
     val chat=next.createConversation(ConversationConfig(systemInstruction=Contents.of("You are MindKeep, a private personal assistant running entirely on this device. Be accurate, concise, organise information clearly, and never claim to perform actions unless the app confirms them. Use supplied personal memory only when relevant.")))
