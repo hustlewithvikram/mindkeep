@@ -35,8 +35,10 @@ object LocalModelRuntime {
   }
  }
  fun generate(prompt:String):Flow<String> = flow {
-  val active=conversation ?: throw IllegalStateException("No local model is loaded.")
-  active.sendMessageAsync(prompt).collect { message -> if(message.text.isNotEmpty())emit(message.text) }
+  mutex.withLock {
+   val active=conversation ?: throw IllegalStateException("No local model is loaded.")
+   active.sendMessageAsync(prompt).collect { message -> if(message.text.isNotEmpty())emit(message.text) }
+  }
  }.flowOn(Dispatchers.IO)
  suspend fun unload()=withContext(Dispatchers.IO){mutex.withLock{closeLocked()}}
  private fun closeLocked(){runCatching{conversation?.close()};runCatching{engine?.close()};conversation=null;engine=null;loadedPath=null}
