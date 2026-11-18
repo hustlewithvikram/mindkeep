@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -97,7 +98,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private enum class MindPage { HOME, SEARCH, TASKS, REMINDERS, SETTINGS }
+private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, SETTINGS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,6 +142,7 @@ fun MindKeepApp() {
 
     val pageTitle = when (page) {
         MindPage.HOME -> "MindKeep"
+        MindPage.ASSISTANT -> "Ask MindKeep"
         MindPage.SEARCH -> "Search"
         MindPage.TASKS -> "Tasks"
         MindPage.REMINDERS -> "Reminders"
@@ -169,6 +171,7 @@ fun MindKeepApp() {
             if (page != MindPage.REMINDERS) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(selected = page == MindPage.HOME, onClick = { page = MindPage.HOME }, icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") })
+                    NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { page = MindPage.ASSISTANT }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Ask") })
                     NavigationBarItem(selected = page == MindPage.SEARCH, onClick = { page = MindPage.SEARCH }, icon = { Icon(Icons.Default.Search, null) }, label = { Text("Search") })
                     NavigationBarItem(selected = page == MindPage.TASKS, onClick = { page = MindPage.TASKS }, icon = { Icon(Icons.Default.TaskAlt, null) }, label = { Text("Tasks") })
                     NavigationBarItem(selected = page == MindPage.SETTINGS, onClick = { page = MindPage.SETTINGS }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
@@ -203,6 +206,7 @@ fun MindKeepApp() {
                     onOpenSearch = { page = MindPage.SEARCH },
                     onRequestNotifications = { askForNotifications() }
                 )
+                MindPage.ASSISTANT -> AssistantPage(onOpenSettings = { page = MindPage.SETTINGS })
                 MindPage.SEARCH -> SearchPage(notes, tasks)
                 MindPage.TASKS -> TasksPage(tasks, onToggle = { task ->
                     tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }
