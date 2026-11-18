@@ -115,7 +115,6 @@ import com.vikram.mindkeep.data.MindReminder
 import com.vikram.mindkeep.data.MindTask
 import com.vikram.mindkeep.core.ai.AssistantWorkStore
 import com.vikram.mindkeep.listener.CapturedNotificationStore
-import com.vikram.mindkeep.listener.MindKeepNotificationListenerService
 import com.vikram.mindkeep.data.MindReminderWorker
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -484,7 +483,7 @@ private fun ActivityEventRow(timestamp: Long, type: String, title: String) {
                 "Saved note" -> Icons.Default.Bookmark
                 "Completed task" -> Icons.Default.CheckCircle
                 "Added task" -> Icons.Default.TaskAlt
-                else -> Icons.Default.Notifications
+                else -> if (type.startsWith("Assistant")) Icons.Default.AutoAwesome else Icons.Default.Notifications
             }, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
