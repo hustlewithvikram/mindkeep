@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +42,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
@@ -98,7 +102,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, SETTINGS }
+private enum class MindPage { HOME, ASSISTANT, SEARCH, TASKS, REMINDERS, CONNECTORS, UPDATER, SETTINGS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,97 +144,40 @@ fun MindKeepApp() {
         return
     }
 
-    val pageTitle = when (page) {
-        MindPage.HOME -> "MindKeep"
-        MindPage.ASSISTANT -> "Ask MindKeep"
-        MindPage.SEARCH -> "Search"
-        MindPage.TASKS -> "Tasks"
-        MindPage.REMINDERS -> "Reminders"
-        MindPage.SETTINGS -> "Settings"
-    }
-
     Scaffold(
-        contentWindowInsets = WindowInsets.navigationBars,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(pageTitle, fontWeight = FontWeight.SemiBold)
-                        if (page == MindPage.HOME) Text("Your personal space", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                navigationIcon = {
-                    if (page == MindPage.REMINDERS) IconButton(onClick = { page = MindPage.TASKS }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            if (page != MindPage.REMINDERS) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                    NavigationBarItem(selected = page == MindPage.HOME, onClick = { page = MindPage.HOME }, icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") })
-                    NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { page = MindPage.ASSISTANT }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Ask") })
-                    NavigationBarItem(selected = page == MindPage.SEARCH, onClick = { page = MindPage.SEARCH }, icon = { Icon(Icons.Default.Search, null) }, label = { Text("Search") })
-                    NavigationBarItem(selected = page == MindPage.TASKS, onClick = { page = MindPage.TASKS }, icon = { Icon(Icons.Default.TaskAlt, null) }, label = { Text("Tasks") })
-                    NavigationBarItem(selected = page == MindPage.SETTINGS, onClick = { page = MindPage.SETTINGS }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
-                }
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                NavigationBarItem(selected = page == MindPage.ASSISTANT, onClick = { page = MindPage.ASSISTANT }, icon = { Icon(Icons.Default.AutoAwesome, null) }, label = { Text("Assistant") })
+                NavigationBarItem(selected = page in setOf(MindPage.HOME, MindPage.SEARCH, MindPage.TASKS, MindPage.REMINDERS, MindPage.CONNECTORS), onClick = { page = MindPage.HOME }, icon = { Icon(Icons.Default.GraphicEq, null) }, label = { Text("Activity") })
+                NavigationBarItem(selected = page in setOf(MindPage.SETTINGS, MindPage.UPDATER), onClick = { page = MindPage.SETTINGS }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
             }
         },
         floatingActionButton = {
             if (page == MindPage.HOME || page == MindPage.TASKS || page == MindPage.REMINDERS) {
-                FloatingActionButton(onClick = {
-                    when (page) {
-                        MindPage.HOME -> showNoteDialog = true
-                        MindPage.TASKS -> showTaskDialog = true
-                        MindPage.REMINDERS -> showReminderDialog = true
-                        else -> Unit
-                    }
-                }) { Icon(Icons.Default.Add, contentDescription = "Add") }
+                FloatingActionButton(onClick = { when (page) {
+                    MindPage.HOME -> showNoteDialog = true
+                    MindPage.TASKS -> showTaskDialog = true
+                    MindPage.REMINDERS -> showReminderDialog = true
+                    else -> Unit
+                } }) { Icon(Icons.Default.Add, contentDescription = "Add") }
             }
         }
     ) { padding ->
-        AnimatedContent(
-            targetState = page,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "mindkeep-page",
-            modifier = Modifier.padding(padding)
-        ) { target ->
+        AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "mindkeep-page", modifier = Modifier.padding(padding)) { target ->
+            val edgeTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp
             when (target) {
-                MindPage.HOME -> HomePage(
-                    notes = notes, tasks = tasks, reminders = reminders,
-                    onAddNote = { showNoteDialog = true },
-                    onOpenTasks = { page = MindPage.TASKS },
-                    onOpenReminders = { page = MindPage.REMINDERS },
-                    onOpenSearch = { page = MindPage.SEARCH },
-                    onRequestNotifications = { askForNotifications() }
-                )
-                MindPage.ASSISTANT -> AssistantPage(onOpenSettings = { page = MindPage.SETTINGS })
-                MindPage.SEARCH -> SearchPage(notes, tasks)
-                MindPage.TASKS -> TasksPage(tasks, onToggle = { task ->
-                    tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }
-                    MindKeepStore.saveTasks(context, tasks)
-                }, onDelete = { task ->
-                    tasks = tasks.filterNot { it.id == task.id }
-                    MindKeepStore.saveTasks(context, tasks)
-                }, onOpenReminders = { page = MindPage.REMINDERS })
-                MindPage.REMINDERS -> RemindersPage(reminders, onToggle = { reminder ->
-                    reminders = reminders.map { if (it.id == reminder.id) it.copy(isDone = !it.isDone) else it }
-                    MindKeepStore.saveReminders(context, reminders)
-                    WorkManager.getInstance(context).cancelUniqueWork(reminder.id)
-                }, onDelete = { reminder ->
-                    reminders = reminders.filterNot { it.id == reminder.id }
-                    MindKeepStore.saveReminders(context, reminders)
-                    WorkManager.getInstance(context).cancelUniqueWork(reminder.id)
-                })
-                MindPage.SETTINGS -> SettingsPage(
-                    onRequestNotifications = { askForNotifications() },
-                    onResetIntro = {
-                        context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
-                        introDone = false
-                    }
-                )
+                MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { page = MindPage.TASKS }, { page = MindPage.REMINDERS }, { page = MindPage.SEARCH }, { askForNotifications() }, { page = MindPage.CONNECTORS }, edgeTop)
+                MindPage.ASSISTANT -> AssistantPage({ page = MindPage.SETTINGS }, edgeTop)
+                MindPage.SEARCH -> SearchPage(notes, tasks, edgeTop)
+                MindPage.TASKS -> TasksPage(tasks, { task -> tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveTasks(context, tasks) }, { task -> tasks = tasks.filterNot { it.id == task.id }; MindKeepStore.saveTasks(context, tasks) }, { page = MindPage.REMINDERS }, edgeTop)
+                MindPage.REMINDERS -> RemindersPage(reminders, { reminder -> reminders = reminders.map { if (it.id == reminder.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, { reminder -> reminders = reminders.filterNot { it.id == reminder.id }; MindKeepStore.saveReminders(context, reminders); WorkManager.getInstance(context).cancelUniqueWork(reminder.id) }, edgeTop)
+                MindPage.CONNECTORS -> ConnectorsPage(edgeTop)
+                MindPage.UPDATER -> UpdaterScreen(edgeTop)
+                MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
+                    context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
+                    introDone = false
+                }, { page = MindPage.UPDATER }, { page = MindPage.CONNECTORS }, edgeTop)
             }
         }
     }
@@ -323,20 +270,36 @@ private fun IntroPoint(title: String, description: String) {
 private fun HomePage(
     notes: List<MindNote>, tasks: List<MindTask>, reminders: List<MindReminder>,
     onAddNote: () -> Unit, onOpenTasks: () -> Unit, onOpenReminders: () -> Unit,
-    onOpenSearch: () -> Unit, onRequestNotifications: () -> Unit
+    onOpenSearch: () -> Unit, onRequestNotifications: () -> Unit,
+    onOpenConnectors: () -> Unit, topPadding: androidx.compose.ui.unit.Dp
 ) {
     val context = LocalContext.current
     val pendingTasks = tasks.count { !it.isDone }
     val upcoming = reminders.filter { !it.isDone }.minByOrNull { it.dueAt }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("A calmer mind starts here.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-                Text(SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()).format(Date()), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                Text("I’m listening.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text("Your personal context, quietly organised.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        item {
+            Card(shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiary))
+                        Text("BACKGROUND LISTENER", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.weight(1f))
+                        Text("Setup pending", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text("MindKeep is ready to connect", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Choose what MindKeep can listen to and which services it can use. Background listening and AI are not active until their services are implemented and enabled.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(onClick = onOpenConnectors, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Hub, null); Spacer(Modifier.width(8.dp)); Text("Manage integrations") }
+                }
             }
         }
         item {
@@ -438,11 +401,11 @@ private fun NoteCard(note: MindNote) {
 }
 
 @Composable
-private fun SearchPage(notes: List<MindNote>, tasks: List<MindTask>) {
+private fun SearchPage(notes: List<MindNote>, tasks: List<MindTask>, topPadding: androidx.compose.ui.unit.Dp) {
     var query by rememberSaveable { mutableStateOf("") }
     val matchesNotes = notes.filter { (it.title + " " + it.body).contains(query, true) }
     val matchesTasks = tasks.filter { it.title.contains(query, true) }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             OutlinedTextField(query, { query = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = { Icon(Icons.Default.Search, null) }, trailingIcon = {
                 if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Default.Close, "Clear") }
@@ -462,10 +425,10 @@ private fun SearchPage(notes: List<MindNote>, tasks: List<MindTask>) {
 }
 
 @Composable
-private fun TasksPage(tasks: List<MindTask>, onToggle: (MindTask) -> Unit, onDelete: (MindTask) -> Unit, onOpenReminders: () -> Unit) {
+private fun TasksPage(tasks: List<MindTask>, onToggle: (MindTask) -> Unit, onDelete: (MindTask) -> Unit, onOpenReminders: () -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
     val open = tasks.filterNot { it.isDone }
     val done = tasks.filter { it.isDone }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
                 Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -509,10 +472,10 @@ private fun TaskRow(task: MindTask, onToggle: () -> Unit, onDelete: () -> Unit) 
 }
 
 @Composable
-private fun RemindersPage(reminders: List<MindReminder>, onToggle: (MindReminder) -> Unit, onDelete: (MindReminder) -> Unit) {
+private fun RemindersPage(reminders: List<MindReminder>, onToggle: (MindReminder) -> Unit, onDelete: (MindReminder) -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
     val upcoming = reminders.filterNot { it.isDone }.sortedBy { it.dueAt }
     val completed = reminders.filter { it.isDone }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Don't keep it all in your head.", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
         item { Text("Reminders are stored on this device and scheduled locally.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (upcoming.isEmpty()) item { EmptyState("No reminders yet", "Create a reminder and MindKeep will notify you at the chosen time.", Icons.Default.Notifications) }
@@ -539,10 +502,10 @@ private fun ReminderRow(reminder: MindReminder, onToggle: () -> Unit, onDelete: 
 }
 
 @Composable
-private fun SettingsPage(onRequestNotifications: () -> Unit, onResetIntro: () -> Unit) {
+private fun SettingsPage(onRequestNotifications: () -> Unit, onResetIntro: () -> Unit, onOpenUpdater: () -> Unit, onOpenConnectors: () -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
     val context = LocalContext.current
     val notificationsAllowed = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -552,6 +515,8 @@ private fun SettingsPage(onRequestNotifications: () -> Unit, onResetIntro: () ->
                 }
             }
         }
+        item { Text("Integrations", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
+        item { SettingRow(Icons.Default.Hub, "Connected services", "Google apps and MCP connectors", "Manage", onOpenConnectors) }
         item { Text("Permissions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
         item {
             SettingRow(
@@ -571,6 +536,8 @@ private fun SettingsPage(onRequestNotifications: () -> Unit, onResetIntro: () ->
                 }
             }
         }
+        item { Text("Updates", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
+        item { SettingRow(Icons.Default.AutoAwesome, "App updater", "Development and production channels", "Open", onOpenUpdater) }
         item { Text("About", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
         item { SettingRow(Icons.Default.Bookmark, "Welcome screen", "Show the introduction again", "Open", onResetIntro) }
         item { Text("MindKeep 0.1.0 · Built for your mind.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 8.dp)) }
@@ -652,9 +619,9 @@ private fun ReminderDialog(onDismiss: () -> Unit, onSave: (String, Int) -> Unit)
 
 
 @Composable
-private fun AssistantPage(onOpenSettings: () -> Unit) {
+private fun AssistantPage(onOpenSettings: () -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
     Column(
-        Modifier.fillMaxSize().padding(20.dp),
+        Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         Card(
@@ -664,8 +631,8 @@ private fun AssistantPage(onOpenSettings: () -> Unit) {
         ) {
             Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("Think with your second brain.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("Ask questions, connect ideas and bring your saved knowledge back when you need it.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("Your AI, always within reach.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("MindKeep is designed to observe permitted context, organise what matters and act through the tools you connect.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         }
         Card(
@@ -678,15 +645,15 @@ private fun AssistantPage(onOpenSettings: () -> Unit) {
                     Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.primary)
                     Text("On-device AI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 }
-                Text("The local AI runtime is not connected yet. Your notes and tasks already work offline; AI chat will become available when an on-device model is added.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("The background listener, on-device model runtime and tool execution are not wired yet. No background monitoring is happening yet.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 AssistChip(onClick = {}, enabled = false, label = { Text("Model not installed") })
                 Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) { Text("AI and app settings") }
             }
         }
         Text("What MindKeep will help with", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        FeaturePreviewRow("Recall", "Find details from your saved notes.")
-        FeaturePreviewRow("Connect", "Spot relationships between ideas and projects.")
-        FeaturePreviewRow("Plan", "Turn thoughts into clear next steps.")
+        FeaturePreviewRow("Listen", "Capture context only from sources you explicitly enable.")
+        FeaturePreviewRow("Connect", "Use Google services and MCP tools with your permission.")
+        FeaturePreviewRow("Act", "Create reminders, calendar events and tasks when asked.")
         Text("Your content stays on this device. Cloud AI is not used as a fallback.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
     }
 }
