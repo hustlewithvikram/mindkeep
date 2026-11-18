@@ -15,6 +15,7 @@ object AssistantMemoryStore {
   compactIfNeeded(f)
  }
  @Synchronized fun recent(c:Context,limit:Int=24):List<MemoryTurn> = readAll(file(c)).takeLast(limit)
+ @Synchronized fun clear(c:Context) { file(c).delete() }
  fun buildContext(c:Context,userPrompt:String,maxChars:Int=12000):String {
   val turns=readAll(file(c));if(turns.isEmpty())return ""
   val recent=turns.takeLast(10)
