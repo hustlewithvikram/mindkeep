@@ -30,7 +30,7 @@ Open the project in Android Studio with JDK 17 and Android SDK 36 installed, syn
 5. Use WorkManager for deferrable work; keep exact-alarm behavior opt-in.
 
 ## Current status
-The app now includes a single-screen introduction, animated in-app splash, Material 3 Compose shell, Home, Search, Tasks, Reminders and Settings pages. Notes, tasks and reminders are persisted locally using app-private storage. Reminders are scheduled with WorkManager and delivered through a notification channel when notification permission is granted. No network permission or account is required. On-device AI, voice capture, richer note editing/search indexing, export/import and database migration to Room remain future implementation areas.
+The app now includes a single-screen introduction, animated in-app splash, Material 3 Compose shell, Home, Ask (AI readiness), Search, Tasks, Reminders and Settings pages. Notes, tasks and reminders are persisted locally using app-private storage. Reminders are scheduled with WorkManager and delivered through a notification channel when notification permission is granted. No network permission or account is required. The on-device assistant contract is defined, but a model runtime and inference implementation are not connected yet. Voice capture, richer note editing/search indexing, export/import and database migration to Room remain future implementation areas.
 
 
 ## GitHub Actions builds
