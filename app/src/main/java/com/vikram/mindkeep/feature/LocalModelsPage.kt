@@ -116,7 +116,6 @@ fun LocalModelsPage(topPadding: Dp) {
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Local AI models", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text("Choose, download and manage the intelligence that powers your assistant.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
