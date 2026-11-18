@@ -113,6 +113,7 @@ import com.vikram.mindkeep.data.MindKeepStore
 import com.vikram.mindkeep.data.MindNote
 import com.vikram.mindkeep.data.MindReminder
 import com.vikram.mindkeep.data.MindTask
+import com.vikram.mindkeep.core.ai.AssistantMemoryStore
 import com.vikram.mindkeep.core.ai.AssistantWorkStore
 import com.vikram.mindkeep.listener.CapturedNotificationStore
 import com.vikram.mindkeep.data.MindReminderWorker
@@ -334,10 +335,12 @@ private fun HomePage(
     var captureNotifications by remember { mutableStateOf(CapturedNotificationStore.isEnabled(context)) }
     var capturedNotifications by remember { mutableStateOf(CapturedNotificationStore.all(context)) }
     var assistantWorkItems by remember { mutableStateOf(AssistantWorkStore.all(context)) }
+    var assistantTurns by remember { mutableStateOf(AssistantMemoryStore.recent(context, 24)) }
     LaunchedEffect(Unit) {
         while (true) {
             capturedNotifications = CapturedNotificationStore.all(context)
             assistantWorkItems = AssistantWorkStore.all(context)
+            assistantTurns = AssistantMemoryStore.recent(context, 24)
             kotlinx.coroutines.delay(1800)
         }
     }
@@ -351,6 +354,7 @@ private fun HomePage(
         reminders.forEach { add(Triple(it.dueAt, "Reminder", it.title)) }
         capturedNotifications.forEach { add(Triple(it.postedAt, "Notification · " + it.appName, (it.title + " " + it.body).trim())) }
         assistantWorkItems.forEach { add(Triple(it.createdAt, "Assistant · " + it.status, it.prompt)) }
+        assistantTurns.filter { it.role == "assistant" }.forEach { add(Triple(it.timestamp, "Assistant replied", it.text.take(220))) }
     }.sortedByDescending { it.first }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
