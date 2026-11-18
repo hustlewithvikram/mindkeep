@@ -47,7 +47,6 @@ fun CrashLogsPage(topPadding: Dp) {
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Crash reports", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text("Local diagnostic files captured when MindKeep encounters an uncaught crash.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
