@@ -6,7 +6,7 @@ import java.io.File
 
 data class LocalAiModel(val id:String,val name:String,val family:String,val description:String,val fileName:String,val downloadUrl:String,val sizeLabel:String,val sizeBytes:Long,val minimumFreeRamGb:Int,val contextTokens:Int,val license:String,val tier:String) {
  fun file(context:Context)=File(context.getExternalFilesDir("models") ?: File(context.filesDir,"models"),fileName)
- fun isInstalled(context:Context)=file(context).exists() && file(context).length()>0
+ fun isInstalled(context:Context)=file(context).exists() && file(context).length()>=(sizeBytes*0.90).toLong()
 }
 object LocalAiCatalog {
  val models=listOf(
