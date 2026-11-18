@@ -16,6 +16,7 @@ import java.io.File
 
 /** Local-only LiteRT-LM engine. No cloud fallback is implemented. */
 object LocalModelRuntime {
+ private const val SYSTEM_INSTRUCTION = "You are MindKeep, a private personal assistant running entirely on this device. Be accurate, concise, organise information clearly, and never claim to perform actions unless the app confirms them. Use supplied personal memory only when relevant."
  private val mutex=Mutex()
  @Volatile private var engine:Engine?=null
  @Volatile private var conversation:Conversation?=null
@@ -28,9 +29,16 @@ object LocalModelRuntime {
    val next=Engine(EngineConfig(modelPath=modelFile.absolutePath, backend=Backend.CPU()))
    try {
     next.initialize()
-    val chat=next.createConversation(ConversationConfig(systemInstruction=Contents.of("You are MindKeep, a private personal assistant running entirely on this device. Be accurate, concise, organise information clearly, and never claim to perform actions unless the app confirms them. Use supplied personal memory only when relevant.")))
+    val chat=next.createConversation(ConversationConfig(systemInstruction=Contents.of(SYSTEM_INSTRUCTION)))
     engine=next;conversation=chat;loadedPath=modelFile.absolutePath
    } catch(t:Throwable){runCatching{next.close()};throw t}
+  }
+ }
+ suspend fun resetConversation()=withContext(Dispatchers.IO) {
+  mutex.withLock {
+   val activeEngine=engine ?: throw IllegalStateException("No local model is loaded.")
+   runCatching{conversation?.close()}
+   conversation=activeEngine.createConversation(ConversationConfig(systemInstruction=Contents.of(SYSTEM_INSTRUCTION)))
   }
  }
  fun generate(prompt:String):Flow<String> = flow {
