@@ -99,7 +99,7 @@ fun UpdaterScreen(topPadding:Dp) {
    installDialog=apkReady
    downloadId=null
   }}
-  ContextCompat.registerReceiver(context,receiver,IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),ContextCompat.RECEIVER_NOT_EXPORTED)
+  ContextCompat.registerReceiver(context,receiver,IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),ContextCompat.RECEIVER_EXPORTED)
   onDispose{runCatching{context.unregisterReceiver(receiver)}}
  }
  LaunchedEffect(Unit){apkReady=apkFile.exists() && apkFile.length()>0;checkAgain()}
