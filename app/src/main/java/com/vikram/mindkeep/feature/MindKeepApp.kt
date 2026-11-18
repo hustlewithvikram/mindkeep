@@ -318,6 +318,11 @@ private fun HomePage(
     val context = LocalContext.current
     val pendingTasks = tasks.count { !it.isDone }
     val upcoming = reminders.filter { !it.isDone }.minByOrNull { it.dueAt }
+    val activityItems = buildList {
+        notes.forEach { add(Triple(it.createdAt, "Saved note", it.title)) }
+        tasks.forEach { add(Triple(it.createdAt, if (it.isDone) "Completed task" else "Added task", it.title)) }
+        reminders.forEach { add(Triple(it.dueAt, "Reminder", it.title)) }
+    }.sortedByDescending { it.first }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 28.dp),
@@ -393,14 +398,19 @@ private fun HomePage(
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Recently captured", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                TextButton(onClick = onOpenSearch) { Text("View all") }
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Recent activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("A timeline of what MindKeep has saved and scheduled.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                TextButton(onClick = onOpenSearch) { Text("Search") }
             }
         }
-        if (notes.isEmpty()) {
-            item { EmptyState("Your thoughts will live here", "Capture your first note to start building your personal library.", Icons.Default.Bookmark) }
+        if (activityItems.isEmpty()) {
+            item { EmptyState("Nothing here yet", "Saved notes, tasks and reminders will appear in this timeline.", Icons.Default.Bookmark) }
         } else {
-            items(notes.take(3), key = { it.id }) { note -> NoteCard(note) }
+            items(activityItems.take(12), key = { it.first }) { event ->
+                ActivityEventRow(event.first, event.second, event.third)
+            }
         }
         item {
             val notificationEnabled = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -431,6 +441,24 @@ private fun SummaryCard(label: String, value: String, icon: androidx.compose.ui.
     }
 }
 
+@Composable
+private fun ActivityEventRow(timestamp: Long, type: String, title: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+            Icon(when (type) {
+                "Saved note" -> Icons.Default.Bookmark
+                "Completed task" -> Icons.Default.CheckCircle
+                "Added task" -> Icons.Default.TaskAlt
+                else -> Icons.Default.Notifications
+            }, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(type, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(SimpleDateFormat("d MMM · h:mm a", Locale.getDefault()).format(Date(timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+        }
+    }
+}
 @Composable
 private fun NoteCard(note: MindNote) {
     Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
