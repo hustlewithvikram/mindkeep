@@ -47,8 +47,9 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          test -n "$KEYSTORE_BASE64" || (echo "Missing ANDROID_KEYSTORE_BASE64 secret" && exit 1)
+          test -n "$KEYSTORE_BASE64" || (echo "::error::Missing ANDROID_KEYSTORE_BASE64 repository secret" && exit 1)
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/mindkeep-upload.jks"
+          test -s "$RUNNER_TEMP/mindkeep-upload.jks" || (echo "::error::Decoded keystore is empty or invalid" && exit 1)
 
       - name: Build signed release APK
         env:
@@ -58,6 +59,10 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must use numeric MAJOR.MINOR.PATCH format, for example 0.1.0"
+            exit 1
+          fi
           IFS=. read -r MAJOR MINOR PATCH <<< "$RELEASE_VERSION"
           VERSION_CODE=$((MAJOR * 1000000 + MINOR * 1000 + PATCH))
           gradle --no-daemon :app:assembleRelease -PversionName="$RELEASE_VERSION" -PversionCode="$VERSION_CODE"
@@ -90,8 +95,10 @@ jobs:
             echo "- Signed with the MindKeep CI signing key."
           } > release-notes.md
 
-      - name: Calculate APK checksum
-        run: sha256sum app/build/outputs/apk/release/app-release.apk > app-release.apk.sha256
+      - name: Verify APK and calculate checksum
+        run: |
+          test -s app/build/outputs/apk/release/app-release.apk
+          sha256sum app/build/outputs/apk/release/app-release.apk > app-release.apk.sha256
 
       - name: Publish GitHub release
         env:
