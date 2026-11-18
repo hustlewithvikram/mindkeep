@@ -20,7 +20,7 @@ object AssistantMemoryStore {
   val recent=turns.takeLast(10)
   val keywords=userPrompt.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter{it.length>=4}.toSet()
   val relevant=turns.dropLast(10).asReversed().filter{turn->keywords.any{turn.text.lowercase().contains(it)}}.take(8)
-  return (relevant+recent).distinctBy{it.timestamp}.sortedBy{it.timestamp}.joinToString("\n"){"\${it.role}: \${it.text}"}.takeLast(maxChars)
+  return (relevant+recent).distinctBy{it.timestamp}.sortedBy{it.timestamp}.joinToString("\n"){"${it.role}: ${it.text}"}.takeLast(maxChars)
  }
  private fun readAll(f:File):List<MemoryTurn> {
   if(!f.exists())return emptyList()
