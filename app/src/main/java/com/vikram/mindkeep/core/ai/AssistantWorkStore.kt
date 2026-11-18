@@ -22,6 +22,7 @@ object AssistantWorkStore {
   save(c,all(c).map{if(it.id==id)it.copy(status=status,result=result) else it})
  }
  @Synchronized fun pending(c:Context)=all(c).filter{it.status=="queued" || it.status=="running"}
+ @Synchronized fun queued(c:Context)=all(c).filter{it.status=="queued"}
  private fun save(c:Context,items:List<PendingAssistantWork>) {
   val a=JSONArray()
   items.forEach{a.put(JSONObject().put("id",it.id).put("prompt",it.prompt).put("status",it.status).put("result",it.result).put("createdAt",it.createdAt))}
