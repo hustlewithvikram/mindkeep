@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -12,7 +14,7 @@ if (!signingStorePath.isNullOrBlank()) {
     require(!signingStorePassword.isNullOrBlank()) { "ANDROID_KEYSTORE_PASSWORD is required when ANDROID_KEYSTORE_PATH is set." }
     require(!signingKeyAlias.isNullOrBlank()) { "ANDROID_KEY_ALIAS is required when ANDROID_KEYSTORE_PATH is set." }
     require(!signingKeyPassword.isNullOrBlank()) { "ANDROID_KEY_PASSWORD is required when ANDROID_KEYSTORE_PATH is set." }
-    require(java.io.File(signingStorePath).isFile) { "Android signing keystore was not found at ANDROID_KEYSTORE_PATH." }
+    require(File(signingStorePath).isFile) { "Android signing keystore was not found at ANDROID_KEYSTORE_PATH." }
 }
 
 android {
@@ -39,9 +41,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     // CI supplies the same upload key to both variants. Local builds retain
     // Android's normal debug signing when the environment variables are absent.
