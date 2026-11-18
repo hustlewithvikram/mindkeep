@@ -2,8 +2,13 @@ package com.vikram.mindkeep.feature
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.ComponentName
+import android.content.Intent
+import android.provider.Settings
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -108,6 +113,8 @@ import com.vikram.mindkeep.data.MindKeepStore
 import com.vikram.mindkeep.data.MindNote
 import com.vikram.mindkeep.data.MindReminder
 import com.vikram.mindkeep.data.MindTask
+import com.vikram.mindkeep.listener.CapturedNotificationStore
+import com.vikram.mindkeep.listener.MindKeepNotificationListenerService
 import com.vikram.mindkeep.data.MindReminderWorker
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -209,7 +216,7 @@ fun MindKeepApp() {
             val edgeTop = if (target in setOf(MindPage.HOME, MindPage.ASSISTANT, MindPage.SETTINGS))
                 WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 12.dp else 8.dp
             when (target) {
-                MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { navigate(MindPage.TASKS) }, { navigate(MindPage.REMINDERS) }, { navigate(MindPage.SEARCH) }, { askForNotifications() }, { navigate(MindPage.CONNECTORS) }, edgeTop)
+                MindPage.HOME -> HomePage(notes, tasks, reminders, { showNoteDialog = true }, { navigate(MindPage.TASKS) }, { navigate(MindPage.REMINDERS) }, { navigate(MindPage.SEARCH) }, { askForNotifications() }, { navigate(MindPage.CONNECTORS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
                 MindPage.ASSISTANT -> AssistantPage(edgeTop)
                 MindPage.SEARCH -> SearchPage(notes, tasks, edgeTop)
                 MindPage.TASKS -> TasksPage(tasks, { task -> tasks = tasks.map { if (it.id == task.id) it.copy(isDone = !it.isDone) else it }; MindKeepStore.saveTasks(context, tasks) }, { task -> tasks = tasks.filterNot { it.id == task.id }; MindKeepStore.saveTasks(context, tasks) }, { navigate(MindPage.REMINDERS) }, edgeTop)
@@ -219,7 +226,7 @@ fun MindKeepApp() {
                 MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
                     context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
                     introDone = false
-                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { selectTab(MindPage.ASSISTANT) }, edgeTop)
+                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { selectTab(MindPage.ASSISTANT) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, edgeTop)
             }
         }
     }
@@ -253,6 +260,11 @@ fun MindKeepApp() {
             showReminderDialog = false
         }
     }
+}
+
+private fun hasNotificationListenerAccess(context: android.content.Context): Boolean {
+    val enabled = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners") ?: return false
+    return enabled.split(":").any { ComponentName.unflattenFromString(it)?.packageName == context.packageName }
 }
 
 @Composable
@@ -313,15 +325,22 @@ private fun HomePage(
     notes: List<MindNote>, tasks: List<MindTask>, reminders: List<MindReminder>,
     onAddNote: () -> Unit, onOpenTasks: () -> Unit, onOpenReminders: () -> Unit,
     onOpenSearch: () -> Unit, onRequestNotifications: () -> Unit,
-    onOpenConnectors: () -> Unit, topPadding: androidx.compose.ui.unit.Dp
+    onOpenConnectors: () -> Unit, onOpenListenerSettings: () -> Unit, topPadding: androidx.compose.ui.unit.Dp
 ) {
     val context = LocalContext.current
     val pendingTasks = tasks.count { !it.isDone }
     val upcoming = reminders.filter { !it.isDone }.minByOrNull { it.dueAt }
+    var notificationAccess by remember { mutableStateOf(hasNotificationListenerAccess(context)) }
+    var captureNotifications by remember { mutableStateOf(CapturedNotificationStore.isEnabled(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        notificationAccess = hasNotificationListenerAccess(context)
+        captureNotifications = CapturedNotificationStore.isEnabled(context)
+    }
     val activityItems = buildList {
         notes.forEach { add(Triple(it.createdAt, "Saved note", it.title)) }
         tasks.forEach { add(Triple(it.createdAt, if (it.isDone) "Completed task" else "Added task", it.title)) }
         reminders.forEach { add(Triple(it.dueAt, "Reminder", it.title)) }
+        CapturedNotificationStore.all(context).forEach { add(Triple(it.postedAt, "Notification · " + it.appName, (it.title + " " + it.body).trim())) }
     }.sortedByDescending { it.first }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -338,13 +357,27 @@ private fun HomePage(
             Card(shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Box(Modifier.size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiary))
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(if (notificationAccess && captureNotifications) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline))
                         Text("BACKGROUND LISTENER", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.weight(1f))
-                        Text("Setup pending", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (!notificationAccess) "Permission needed" else if (captureNotifications) "Listening" else "Paused", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text("MindKeep is ready to connect", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                    Text("Choose what MindKeep can listen to and which services it can use. Background listening and AI are not active until their services are implemented and enabled.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Let MindKeep remember what matters.", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Capture notification titles and text from apps on this device. Captured content stays local and can be used as personal context.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (!notificationAccess) {
+                        OutlinedButton(onClick = onOpenListenerSettings, modifier = Modifier.fillMaxWidth()) { Text("Grant notification access") }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text("Capture notifications", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                                Text("You can pause this at any time.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(checked = captureNotifications, onCheckedChange = {
+                                captureNotifications = it
+                                CapturedNotificationStore.setEnabled(context, it)
+                            })
+                        }
+                    }
                     OutlinedButton(onClick = onOpenConnectors, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Hub, null); Spacer(Modifier.width(8.dp)); Text("Manage integrations") }
                 }
             }
@@ -578,6 +611,7 @@ private fun SettingsPage(
     onOpenUpdater: () -> Unit,
     onOpenConnectors: () -> Unit,
     onOpenAssistant: () -> Unit,
+    onOpenListenerSettings: () -> Unit,
     topPadding: androidx.compose.ui.unit.Dp
 ) {
     val context = LocalContext.current
@@ -622,6 +656,7 @@ private fun SettingsPage(
         item {
             SettingsGroup("App preferences", listOf(
                 SettingEntry(Icons.Default.Notifications, "Notifications", if (notificationsAllowed) "Allowed · Local reminders can alert you" else "Disabled · Enable to receive reminders", if (notificationsAllowed) "On" else "Enable", onRequestNotifications),
+                SettingEntry(Icons.Default.GraphicEq, "Notification access", "Allow MindKeep to capture app notifications", "System", onOpenListenerSettings),
                 SettingEntry(Icons.Default.SystemUpdate, "App updates", "Development and production channels", "Open", onOpenUpdater)
             ))
         }
