@@ -217,6 +217,7 @@ fun AssistantPage(topPadding: Dp) {
                 selected = activeModel?.id == model.id,
                 recommended = model.minimumFreeRamGb <= availableRam,
                 downloading = downloadModelId == model.id && downloadId != null,
+                downloadEnabled = downloadId == null,
                 progress = if (downloadModelId == model.id) downloadPercent else 0,
                 onDownload = { if (downloadId == null) startDownload(model) },
                 onSelect = {
@@ -339,7 +340,7 @@ private fun ModelMetric(label: String, value: String) {
 @Composable
 private fun ModelCard(
     model: LocalAiModel, installed: Boolean, selected: Boolean, recommended: Boolean,
-    downloading: Boolean, progress: Int, onDownload: () -> Unit, onSelect: () -> Unit, onDelete: () -> Unit
+    downloading: Boolean, downloadEnabled: Boolean, progress: Int, onDownload: () -> Unit, onSelect: () -> Unit, onDelete: () -> Unit
 ) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(17.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -367,7 +368,7 @@ private fun ModelCard(
                     OutlinedButton(onClick = onDelete) { Text("Remove") }
                 }
             } else {
-                Button(onClick = onDownload, modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = onDownload, enabled = downloadEnabled, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Download, null); Spacer(Modifier.width(8.dp)); Text("Download model")
                 }
             }
