@@ -121,7 +121,7 @@ fun UpdaterScreen(topPadding:Dp) {
   },enabled=release!=null && !ready,modifier=Modifier.fillMaxWidth()){Text("Download update")}
   Text("The downloaded APK is removed after a successful update on the next app launch. Android may ask once for install permission.",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.outline)
  }
- if(installDialog) AlertDialog(onDismissRequest={installDialog=false},title={Text("Update downloaded")},text={Text("A MindKeep update is ready. Install it now?")},confirmButton={Button(onClick={installDialog=false;install()}){Text("Install")}},dismissButton={TextButton(onClick={installDialog=false;apk.delete();ready=false;status="Install cancelled and APK discarded."}){Text("Cancel")}})
+ if(installDialog) AlertDialog(onDismissRequest={installDialog=false},title={Text("Update downloaded")},text={Text("A MindKeep update is ready. Install it now?")},confirmButton={Button(onClick={installDialog=false;install()}){Text("Install")}},dismissButton={TextButton(onClick={installDialog=false;status="Installation cancelled. The APK is kept until you install or discard it."}){Text("Cancel")}})
 }
 
 @Composable
