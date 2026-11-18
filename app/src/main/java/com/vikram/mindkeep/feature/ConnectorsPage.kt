@@ -28,7 +28,6 @@ fun ConnectorsPage(topPadding: Dp) {
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Integrations", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text("Connect the tools MindKeep can work with. Nothing connects without your permission.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
