@@ -186,6 +186,10 @@ fun AssistantPage(topPadding: Dp) {
                             Text("Choose the largest installed model under a conservative free-RAM estimate.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = autoSelect, onCheckedChange = {
+                            if (!it && defaultId == null && activeModel != null) {
+                                defaultId = activeModel.id
+                                LocalAiPreferences.setDefaultModelId(context, activeModel.id)
+                            }
                             autoSelect = it
                             LocalAiPreferences.setAutoSelectEnabled(context, it)
                         })
