@@ -61,7 +61,7 @@ fun UpdaterScreen(topPadding:Dp) {
     connection.setRequestProperty("Accept","application/vnd.github+json")
     connection.setRequestProperty("User-Agent","MindKeep-Updater")
     try {
-     if(connection.responseCode !in 200..299)error("No published \${channel.lowercase()} release was found.")
+     if(connection.responseCode !in 200..299)error("No published ${channel.lowercase()} release was found.")
      val json=JSONObject(connection.inputStream.bufferedReader().use{it.readText()})
      val assets=json.getJSONArray("assets")
      var apkUrl:String?=null
@@ -79,10 +79,10 @@ fun UpdaterScreen(topPadding:Dp) {
  fun installApk() {
   if(!apkFile.exists()){apkReady=false;status="Downloaded APK is missing.";return}
   if(!context.packageManager.canRequestPackageInstalls()){
-   context.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:\${context.packageName}")))
+   context.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:${context.packageName}")))
    status="Allow MindKeep to install apps, then tap Install APK again.";return
   }
-  val uri=FileProvider.getUriForFile(context,"\${context.packageName}.fileprovider",apkFile)
+  val uri=FileProvider.getUriForFile(context,"${context.packageName}.fileprovider",apkFile)
   context.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri,"application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
  }
 
@@ -157,18 +157,18 @@ fun UpdaterScreen(topPadding:Dp) {
   Button(onClick={
    val item=release ?: return@Button
    apkFile.delete()
-   val req=DownloadManager.Request(Uri.parse(item.apkUrl)).setTitle("MindKeep update").setDescription("Downloading \${item.tag}")
+   val req=DownloadManager.Request(Uri.parse(item.apkUrl)).setTitle("MindKeep update").setDescription("Downloading ${item.tag}")
     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
     .setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,"mindkeep-update.apk")
     .setAllowedOverMetered(true).setAllowedOverRoaming(false)
    downloadId=(context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
-   status="Downloading \${item.tag}…"
+   status="Downloading ${item.tag}…"
   },enabled=release!=null && !apkReady && downloadId==null,modifier=Modifier.fillMaxWidth()){
    Icon(Icons.Default.CloudDownload,null);Spacer(Modifier.width(8.dp));Text("Download update")
   }
   Text("Android handles the installer. After successful package replacement, MindKeep removes the downloaded APK automatically.",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.outline)
  }
- if(installDialog)AlertDialog(onDismissRequest={installDialog=false},title={Text("Update downloaded")},text={Text("MindKeep \${release?.tag ?: ""} is ready. Install it now?")},confirmButton={Button(onClick={installDialog=false;installApk()}){Text("Install")}},dismissButton={TextButton(onClick={installDialog=false}){Text("Cancel")}})
+ if(installDialog)AlertDialog(onDismissRequest={installDialog=false},title={Text("Update downloaded")},text={Text("MindKeep ${release?.tag ?: ""} is ready. Install it now?")},confirmButton={Button(onClick={installDialog=false;installApk()}){Text("Install")}},dismissButton={TextButton(onClick={installDialog=false}){Text("Cancel")}})
 }
 
 @Composable
