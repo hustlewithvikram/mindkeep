@@ -37,24 +37,24 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var prompt by rememberSaveable { mutableStateOf("") }
-    var turns by remember { mutableStateOf(AssistantMemoryStore.recent(context, 100)) }
+    var turns by remember { mutableStateOf(runCatching { AssistantMemoryStore.recent(context, 100) }.getOrDefault(emptyList())) }
     var response by remember { mutableStateOf("") }
     var generating by remember { mutableStateOf(false) }
     var loadingModel by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var pendingCount by remember { mutableIntStateOf(AssistantWorkStore.pending(context).size) }
-    val activeModel = remember { LocalAiPreferences.activeModel(context) }
+    var pendingCount by remember { mutableIntStateOf(runCatching { AssistantWorkStore.pending(context).size }.getOrDefault(0)) }
+    val activeModel = remember { runCatching { LocalAiPreferences.activeModel(context) }.getOrNull() }
     val messages = turns
 
     LaunchedEffect(activeModel?.id) {
         if (activeModel != null) {
-            AssistantWorkWorker.resumePending(context)
-            pendingCount = AssistantWorkStore.pending(context).size
+            runCatching { AssistantWorkWorker.resumePending(context) }
+            pendingCount = runCatching { AssistantWorkStore.pending(context).size }.getOrDefault(0)
         }
     }
     LaunchedEffect(Unit) {
         while (true) {
-            pendingCount = AssistantWorkStore.pending(context).size
+            pendingCount = runCatching { AssistantWorkStore.pending(context).size }.getOrDefault(0)
             kotlinx.coroutines.delay(1800)
         }
     }
