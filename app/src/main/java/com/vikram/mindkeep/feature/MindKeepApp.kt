@@ -285,7 +285,7 @@ private fun IntroScreen(onContinue: () -> Unit) {
                     Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(58.dp))
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Make space for\\nwhat matters.", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
+                    Text("Make space for\nwhat matters.", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
                     Text("A private place for your thoughts, plans and reminders. Capture now, find them whenever you need.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
