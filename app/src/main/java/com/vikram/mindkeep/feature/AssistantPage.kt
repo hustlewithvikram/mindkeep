@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vikram.mindkeep.core.ai.AssistantMemoryStore
-import com.vikram.mindkeep.core.ai.LocalAiCatalog
 import com.vikram.mindkeep.core.ai.LocalAiPreferences
 import com.vikram.mindkeep.core.ai.LocalModelRuntime
 import kotlinx.coroutines.launch
@@ -39,8 +39,7 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
     var generating by remember { mutableStateOf(false) }
     var loadingModel by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var refresh by remember { mutableIntStateOf(0) }
-    val activeModel = remember(refresh) { LocalAiPreferences.activeModel(context) }
+    val activeModel = remember { LocalAiPreferences.activeModel(context) }
     val messages = turns
 
     fun sendMessage(value: String) {
@@ -139,7 +138,7 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
                     }
                 }
             }
-            if (response.isNotBlank()) item { ChatMessageBubble("assistant", response, System.currentTimeMillis()) }
+            if (response.isNotBlank() && generating) item { ChatMessageBubble("assistant", response, System.currentTimeMillis()) }
             if (error != null) item {
                 Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.errorContainer) {
                     Text(error!!, Modifier.fillMaxWidth().padding(14.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodySmall)
