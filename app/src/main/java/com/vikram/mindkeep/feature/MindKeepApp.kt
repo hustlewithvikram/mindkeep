@@ -332,6 +332,15 @@ private fun HomePage(
     val upcoming = reminders.filter { !it.isDone }.minByOrNull { it.dueAt }
     var notificationAccess by remember { mutableStateOf(hasNotificationListenerAccess(context)) }
     var captureNotifications by remember { mutableStateOf(CapturedNotificationStore.isEnabled(context)) }
+    var capturedNotifications by remember { mutableStateOf(CapturedNotificationStore.all(context)) }
+    var assistantWorkItems by remember { mutableStateOf(AssistantWorkStore.all(context)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            capturedNotifications = CapturedNotificationStore.all(context)
+            assistantWorkItems = AssistantWorkStore.all(context)
+            kotlinx.coroutines.delay(1800)
+        }
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         notificationAccess = hasNotificationListenerAccess(context)
         captureNotifications = CapturedNotificationStore.isEnabled(context)
@@ -340,8 +349,8 @@ private fun HomePage(
         notes.forEach { add(Triple(it.createdAt, "Saved note", it.title)) }
         tasks.forEach { add(Triple(it.createdAt, if (it.isDone) "Completed task" else "Added task", it.title)) }
         reminders.forEach { add(Triple(it.dueAt, "Reminder", it.title)) }
-        CapturedNotificationStore.all(context).forEach { add(Triple(it.postedAt, "Notification · " + it.appName, (it.title + " " + it.body).trim())) }
-        AssistantWorkStore.all(context).forEach { add(Triple(it.createdAt, "Assistant · " + it.status, it.prompt)) }
+        capturedNotifications.forEach { add(Triple(it.postedAt, "Notification · " + it.appName, (it.title + " " + it.body).trim())) }
+        assistantWorkItems.forEach { add(Triple(it.createdAt, "Assistant · " + it.status, it.prompt)) }
     }.sortedByDescending { it.first }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
