@@ -66,6 +66,13 @@ fun AssistantPage(topPadding: Dp) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        while (true) {
+            pendingCount = AssistantWorkStore.pending(context).size
+            kotlinx.coroutines.delay(1600)
+        }
+    }
+
     LaunchedEffect(downloadId) {
         val id = downloadId ?: return@LaunchedEffect
         while (true) {
