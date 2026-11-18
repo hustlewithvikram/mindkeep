@@ -289,9 +289,10 @@ fun UpdaterScreen(topPadding: Dp) {
                 Button(
                     onClick = { checkAgain() },
                     enabled = !checking && downloadId == null,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                ) { Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(5.dp)); Text("Check", maxLines = 1) }
+                ) { Icon(Icons.Default.Refresh, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Check", maxLines = 1, style = MaterialTheme.typography.labelMedium) }
                 Button(
                     onClick = {
                         apkFile.delete(); apkReady = false; downloadedBytes = 0L; installDialog = false
@@ -299,15 +300,17 @@ fun UpdaterScreen(topPadding: Dp) {
                         status = "Downloaded APK discarded."
                     },
                     enabled = apkReady,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(5.dp)); Text("Discard", maxLines = 1) }
+                ) { Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Discard", maxLines = 1, style = MaterialTheme.typography.labelMedium) }
                 Button(
                     onClick = { installApk() },
                     enabled = apkReady,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
-                ) { Icon(Icons.Default.InstallMobile, null); Spacer(Modifier.width(5.dp)); Text("Install", maxLines = 1) }
+                ) { Icon(Icons.Default.InstallMobile, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Install", maxLines = 1, style = MaterialTheme.typography.labelMedium) }
             }
             Text("The installer is handled by Android. MindKeep removes the downloaded APK after a successful update.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
         }
