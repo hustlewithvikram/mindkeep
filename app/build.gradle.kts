@@ -9,6 +9,13 @@ val signingStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
 val signingKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
 val signingKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
 
+if (!signingStorePath.isNullOrBlank()) {
+    require(!signingStorePassword.isNullOrBlank()) { "ANDROID_KEYSTORE_PASSWORD is required when ANDROID_KEYSTORE_PATH is set." }
+    require(!signingKeyAlias.isNullOrBlank()) { "ANDROID_KEY_ALIAS is required when ANDROID_KEYSTORE_PATH is set." }
+    require(!signingKeyPassword.isNullOrBlank()) { "ANDROID_KEY_PASSWORD is required when ANDROID_KEYSTORE_PATH is set." }
+    require(java.io.File(signingStorePath).isFile) { "Android signing keystore was not found at ANDROID_KEYSTORE_PATH." }
+}
+
 android {
     namespace = "com.vikram.mindkeep"
     compileSdk = 37
