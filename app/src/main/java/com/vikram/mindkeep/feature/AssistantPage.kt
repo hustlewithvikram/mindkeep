@@ -3,7 +3,7 @@ package com.vikram.mindkeep.feature
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -144,7 +144,7 @@ fun AssistantPage(topPadding: Dp, onOpenModels: () -> Unit = {}) {
                     }
                 }
             }
-            items(messages, key = { "${it.timestamp}-${it.role}-${it.text.hashCode()}" }) { turn ->
+            itemsIndexed(messages, key = { index, turn -> "${turn.timestamp}-${turn.role}-${turn.text.hashCode()}-$index" }) { _, turn ->
                 ChatMessageBubble(turn.role, turn.text, turn.timestamp)
             }
             if (generating && response.isBlank()) {
