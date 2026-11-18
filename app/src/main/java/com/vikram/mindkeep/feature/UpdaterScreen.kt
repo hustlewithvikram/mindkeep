@@ -52,6 +52,7 @@ fun UpdaterScreen(topPadding:Dp) {
  val apkFile=remember{File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"mindkeep-update.apk")}
 
  fun checkAgain() {
+  release=null
   checking=true
   scope.launch {
    val result=withContext(Dispatchers.IO){runCatching{
@@ -96,6 +97,7 @@ fun UpdaterScreen(topPadding:Dp) {
    }
    status=if(apkReady)"Download complete. Ready to install." else "Download failed. Please try again."
    installDialog=apkReady
+   downloadId=null
   }}
   ContextCompat.registerReceiver(context,receiver,IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),ContextCompat.RECEIVER_NOT_EXPORTED)
   onDispose{runCatching{context.unregisterReceiver(receiver)}}
@@ -150,7 +152,7 @@ fun UpdaterScreen(topPadding:Dp) {
    }
   }
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)){
-   OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Icon(Icons.Default.Refresh,null);Spacer(Modifier.width(4.dp));Text("Check")}
+   OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Icon(Icons.Default.Refresh,null);Spacer(Modifier.width(4.dp));Text("Check again")}
    OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Icon(Icons.Default.Storage,null);Spacer(Modifier.width(4.dp));Text("Discard")}
    Button(onClick={installApk()},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Install")}
   }
