@@ -152,7 +152,7 @@ fun UpdaterScreen(topPadding:Dp) {
    }
   }
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)){
-   OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Icon(Icons.Default.Refresh,null);Spacer(Modifier.width(4.dp));Text("Check again")}
+   OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Text("Check again",maxLines=1)}
    OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Icon(Icons.Default.Storage,null);Spacer(Modifier.width(4.dp));Text("Discard")}
    Button(onClick={installApk()},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Install")}
   }
