@@ -45,6 +45,13 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Hub
@@ -537,58 +544,109 @@ private fun ReminderRow(reminder: MindReminder, onToggle: () -> Unit, onDelete: 
 }
 
 @Composable
-private fun SettingsPage(onRequestNotifications: () -> Unit, onResetIntro: () -> Unit, onOpenUpdater: () -> Unit, onOpenConnectors: () -> Unit, topPadding: androidx.compose.ui.unit.Dp) {
+private fun SettingsPage(
+    onRequestNotifications: () -> Unit,
+    onResetIntro: () -> Unit,
+    onOpenUpdater: () -> Unit,
+    onOpenConnectors: () -> Unit,
+    topPadding: androidx.compose.ui.unit.Dp
+) {
     val context = LocalContext.current
-    val notificationsAllowed = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    val notificationsAllowed = Build.VERSION.SDK_INT < 33 ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = topPadding, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
         item {
-            Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("MindKeep", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    Text("Your personal space. Stored locally, designed to work offline.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    AssistChip(onClick = {}, label = { Text("Offline-first") }, leadingIcon = { Icon(Icons.Default.Check, null) })
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("Settings", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text("Make MindKeep work the way you want.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        item {
+            Card(shape = RoundedCornerShape(26.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Box(Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Bookmark, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(27.dp))
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("MindKeep", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("Private by default · Offline-first", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
                 }
             }
         }
-        item { Text("Integrations", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
-        item { SettingRow(Icons.Default.Hub, "Connected services", "Google apps and MCP connectors", "Manage", onOpenConnectors) }
-        item { Text("Permissions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
         item {
-            SettingRow(
-                icon = Icons.Default.Notifications,
-                title = "Notifications",
-                subtitle = if (notificationsAllowed) "Allowed — reminders can alert you" else "Not allowed — reminders will stay in the app",
-                action = if (notificationsAllowed) "Allowed" else "Enable",
-                onClick = onRequestNotifications
-            )
+            SettingsGroup("Assistant", listOf(
+                SettingEntry(Icons.Default.AutoAwesome, "Local AI models", "Download and manage on-device models", "Assistant", {}),
+                SettingEntry(Icons.Default.Memory, "Personal memory", "Conversation history stays on this device", "Local", {})
+            ))
         }
-        item { Text("Your data", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
         item {
-            Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Stored on this device", fontWeight = FontWeight.SemiBold)
-                    Text("Notes, tasks and reminders use local app storage. MindKeep does not need an account or internet connection for these features.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            SettingsGroup("Connections", listOf(
+                SettingEntry(Icons.Default.Hub, "Connected services", "Google apps and MCP connectors", "Manage", onOpenConnectors)
+            ))
         }
-        item { Text("Updates", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
-        item { SettingRow(Icons.Default.AutoAwesome, "App updater", "Development and production channels", "Open", onOpenUpdater) }
-        item { Text("About", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold) }
-        item { SettingRow(Icons.Default.Bookmark, "Welcome screen", "Show the introduction again", "Open", onResetIntro) }
-        item { Text("MindKeep 0.1.0 · Built for your mind.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 8.dp)) }
+        item {
+            SettingsGroup("App preferences", listOf(
+                SettingEntry(Icons.Default.Notifications, "Notifications", if (notificationsAllowed) "Allowed · Local reminders can alert you" else "Disabled · Enable to receive reminders", if (notificationsAllowed) "On" else "Enable", onRequestNotifications),
+                SettingEntry(Icons.Default.SystemUpdate, "App updates", "Development and production channels", "Open", onOpenUpdater)
+            ))
+        }
+        item {
+            SettingsGroup("Privacy and storage", listOf(
+                SettingEntry(Icons.Default.Security, "Your data", "Notes, tasks and memories are stored locally", "On device", {}),
+                SettingEntry(Icons.Default.Storage, "Storage", "Model files can be removed from Assistant", "Manage", {})
+            ))
+        }
+        item {
+            SettingsGroup("About", listOf(
+                SettingEntry(Icons.Default.Info, "Welcome screen", "Show the introduction again", "Open", onResetIntro),
+                SettingEntry(Icons.Default.Code, "Version", "MindKeep 0.1.0 · Main channel", "Info", {})
+            ))
+        }
+        item {
+            Text("MindKeep does not upload your personal memory to a cloud AI service.", Modifier.fillMaxWidth().padding(horizontal = 4.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+        }
     }
 }
 
+private data class SettingEntry(
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val title: String,
+    val subtitle: String,
+    val trailing: String,
+    val onClick: () -> Unit
+)
+
 @Composable
-private fun SettingRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, action: String, onClick: () -> Unit) {
-    Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun SettingsGroup(title: String, entries: List<SettingEntry>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp))
+        Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+            Column {
+                entries.forEachIndexed { index, entry ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable(onClick = entry.onClick).padding(horizontal = 15.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(13.dp)
+                    ) {
+                        Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+                            Icon(entry.icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(entry.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(entry.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(entry.trailing, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline)
+                    }
+                    if (index != entries.lastIndex) HorizontalDivider(Modifier.padding(start = 70.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+                }
             }
-            Text(action, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
