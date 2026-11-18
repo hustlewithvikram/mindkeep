@@ -520,15 +520,6 @@ private fun HomePage(
             }
         }
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("Recent activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("A timeline of what MindKeep has saved and scheduled.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                IconButton(onClick = onOpenSearch) { Icon(Icons.Default.Search, contentDescription = "Search activity") }
-            }
-        }
-        item {
             var activityExpanded by rememberSaveable { mutableStateOf(false) }
             Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp)) {
@@ -539,6 +530,9 @@ private fun HomePage(
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text("Recent activity", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             Text("${activityItems.size} events · Your recent notes, tasks and alerts", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        IconButton(onClick = onOpenSearch) {
+                            Icon(Icons.Default.Search, contentDescription = "Search activity")
                         }
                         IconButton(onClick = { activityExpanded = !activityExpanded }) {
                             Icon(if (activityExpanded) Icons.Default.ChevronUp else Icons.Default.ChevronDown, contentDescription = if (activityExpanded) "Collapse activity" else "Expand activity")
