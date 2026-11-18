@@ -178,8 +178,8 @@ fun UpdaterScreen(topPadding:Dp) {
   }
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)){
    OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Text("Check again",maxLines=1)}
-   OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply();status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Icon(Icons.Default.Storage,null);Spacer(Modifier.width(4.dp));Text("Discard")}
-   Button(onClick={installApk()},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Install")}
+   OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply();status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Discard APK",maxLines=1)}
+   Button(onClick={installApk()},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Install APK",maxLines=1)}
   }
   Button(onClick={
    val item=release ?: return@Button
