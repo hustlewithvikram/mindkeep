@@ -3,7 +3,11 @@ name: Debug APK
 on:
   push:
     branches:
-      - '**'
+      - main
+
+concurrency:
+  group: mindkeep-debug-publish
+  cancel-in-progress: true
 
 permissions:
   contents: write
