@@ -295,10 +295,7 @@ fun MindKeepApp() {
                 MindPage.UPDATER -> UpdaterScreen(edgeTop)
                 MindPage.LOCAL_MODELS -> LocalModelsPage(edgeTop)
                 MindPage.CRASH_LOGS -> CrashLogsPage(edgeTop)
-                MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, {
-                    context.getSharedPreferences("mindkeep_local_v1", 0).edit().putBoolean("intro_complete", false).apply()
-                    introDone = false
-                }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { navigate(MindPage.LOCAL_MODELS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, { navigate(MindPage.CRASH_LOGS) }, edgeTop)
+                MindPage.SETTINGS -> SettingsPage({ askForNotifications() }, { navigate(MindPage.UPDATER) }, { navigate(MindPage.CONNECTORS) }, { navigate(MindPage.LOCAL_MODELS) }, { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }, { navigate(MindPage.CRASH_LOGS) }, edgeTop)
             }
             }
         }
