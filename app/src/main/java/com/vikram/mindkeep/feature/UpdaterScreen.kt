@@ -45,11 +45,12 @@ fun UpdaterScreen(topPadding:Dp) {
  var release by remember{mutableStateOf<UpdateRelease?>(null)}
  var checking by remember{mutableStateOf(false)}
  var status by remember{mutableStateOf("Checking the selected channel…")}
- var downloadId by remember{mutableStateOf<Long?>(null)}
- var downloadProgress by remember{mutableIntStateOf(0)}
- var apkReady by remember{mutableStateOf(false)}
- var installDialog by remember{mutableStateOf(false)}
  val apkFile=remember{File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"mindkeep-update.apk")}
+ val updatePrefs=remember{context.getSharedPreferences("mindkeep_updater",Context.MODE_PRIVATE)}
+ var downloadId by remember{mutableStateOf(updatePrefs.getLong("download_id",-1L).takeIf{it>0})}
+ var downloadProgress by remember{mutableIntStateOf(0)}
+ var apkReady by remember{mutableStateOf(updatePrefs.getBoolean("apk_ready",false) && apkFile.exists())}
+ var installDialog by remember{mutableStateOf(false)}
 
  fun checkAgain() {
   release=null
@@ -96,28 +97,52 @@ fun UpdaterScreen(topPadding:Dp) {
     apkReady=cursor.moveToFirst() && cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))==DownloadManager.STATUS_SUCCESSFUL && apkFile.exists() && apkFile.length()>0
    }
    status=if(apkReady)"Download complete. Ready to install." else "Download failed. Please try again."
+   if(apkReady) updatePrefs.edit().putBoolean("apk_ready",true).remove("download_id").apply()
+   else { apkFile.delete();updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply() }
    installDialog=apkReady
    downloadId=null
   }}
   ContextCompat.registerReceiver(context,receiver,IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),ContextCompat.RECEIVER_EXPORTED)
   onDispose{runCatching{context.unregisterReceiver(receiver)}}
  }
- LaunchedEffect(Unit){apkReady=apkFile.exists() && apkFile.length()>0;checkAgain()}
+ LaunchedEffect(Unit){if(!apkReady && downloadId==null)apkFile.delete();checkAgain()}
  LaunchedEffect(channel){checkAgain()}
  LaunchedEffect(downloadId){
   val id=downloadId ?: return@LaunchedEffect
   while(true){
-   val progress=withContext(Dispatchers.IO){
+   val state=withContext(Dispatchers.IO){
     val dm=context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     dm.query(DownloadManager.Query().setFilterById(id)).use{cursor->
      if(!cursor.moveToFirst())null else {
+      val statusValue=cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
       val got=cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
       val total=cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-      if(total>0)((got*100)/total).toInt().coerceIn(0,100) else 0
+      Triple(statusValue,got,total)
      }
     }
-   } ?: break
-   downloadProgress=progress
+   }
+   if(state==null){
+    apkFile.delete();apkReady=false;downloadId=null
+    updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply()
+    status="Download record not found. The incomplete APK was removed."
+    break
+   }
+   if(state.third>0)downloadProgress=((state.second*100)/state.third).toInt().coerceIn(0,100)
+   when(state.first){
+    DownloadManager.STATUS_SUCCESSFUL -> {
+     apkReady=apkFile.exists() && apkFile.length()>0
+     status=if(apkReady)"Download complete. Ready to install." else "Downloaded APK is missing."
+     updatePrefs.edit().putBoolean("apk_ready",apkReady).remove("download_id").apply()
+     installDialog=apkReady;downloadId=null
+     break
+    }
+    DownloadManager.STATUS_FAILED -> {
+     apkFile.delete();apkReady=false;downloadId=null
+     updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply()
+     status="Download failed. Please try again."
+     break
+    }
+   }
    delay(700)
   }
  }
@@ -153,7 +178,7 @@ fun UpdaterScreen(topPadding:Dp) {
   }
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)){
    OutlinedButton(onClick={checkAgain()},enabled=!checking,modifier=Modifier.weight(1f)){Text("Check again",maxLines=1)}
-   OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Icon(Icons.Default.Storage,null);Spacer(Modifier.width(4.dp));Text("Discard")}
+   OutlinedButton(onClick={apkFile.delete();apkReady=false;installDialog=false;updatePrefs.edit().putBoolean("apk_ready",false).remove("download_id").apply();status="Downloaded APK discarded."},enabled=apkReady,modifier=Modifier.weight(1f)){Icon(Icons.Default.Storage,null);Spacer(Modifier.width(4.dp));Text("Discard")}
    Button(onClick={installApk()},enabled=apkReady,modifier=Modifier.weight(1f)){Text("Install")}
   }
   Button(onClick={
@@ -164,6 +189,7 @@ fun UpdaterScreen(topPadding:Dp) {
     .setDestinationInExternalFilesDir(context,Environment.DIRECTORY_DOWNLOADS,"mindkeep-update.apk")
     .setAllowedOverMetered(true).setAllowedOverRoaming(false)
    downloadId=(context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
+   updatePrefs.edit().putLong("download_id",downloadId!!).putBoolean("apk_ready",false).apply()
    status="Downloading ${item.tag}…"
   },enabled=release!=null && !apkReady && downloadId==null,modifier=Modifier.fillMaxWidth()){
    Icon(Icons.Default.CloudDownload,null);Spacer(Modifier.width(8.dp));Text("Download update")
